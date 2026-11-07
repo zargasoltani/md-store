@@ -339,6 +339,8 @@ const translations={
 };
 Object.assign(translations.ar,{archiveOrders:"الطلبات المؤرشفة",restoreOrder:"استعادة الطلب",archiveOrder:"أرشفة الطلب",archiveOrderConfirm:"أرشفة الطلب رقم {id}؟ سيبقى محفوظًا ويمكن استعادته لاحقًا.",restoreOrderConfirm:"استعادة الطلب رقم {id} إلى القائمة؟",archiveOrderFailed:"تعذرت أرشفة الطلب",restoreOrderFailed:"تعذرت استعادة الطلب"});
 Object.assign(translations.fr,{archiveOrders:"Commandes archivées",restoreOrder:"Restaurer la commande",archiveOrder:"Archiver la commande",archiveOrderConfirm:"Archiver la commande n° {id} ? Elle restera enregistrée et pourra être restaurée.",restoreOrderConfirm:"Restaurer la commande n° {id} dans la liste ?",archiveOrderFailed:"Impossible d’archiver la commande",restoreOrderFailed:"Impossible de restaurer la commande"});
+Object.assign(translations.ar,{savingProduct:"جارٍ حفظ المنتج...",productNameRequired:"أدخل اسم المنتج.",productPriceRequired:"أدخل سعرًا صالحًا.",productSaveFailed:"تعذر حفظ المنتج. تحقق من الاتصال ثم أعد المحاولة.",productSavedRefreshFailed:"تم حفظ المنتج، لكن تعذر تحديث لوحة الإدارة. أعد تحميل الصفحة."});
+Object.assign(translations.fr,{savingProduct:"Enregistrement du produit…",productNameRequired:"Saisissez le nom du produit.",productPriceRequired:"Saisissez un prix valide.",productSaveFailed:"Impossible d’enregistrer le produit. Vérifiez la connexion puis réessayez.",productSavedRefreshFailed:"Produit enregistré, mais le tableau de bord n’a pas pu être actualisé. Rechargez la page."});
 Object.assign(translations.ar,{maskProducts:"Masques",categoryAdminOnly:"للاستخدام في الإدارة فقط",categoryPublic:"ظاهرة على المتجر"});
 Object.assign(translations.fr,{maskProducts:"Masques",categoryAdminOnly:"Administration uniquement",categoryPublic:"Visible sur la boutique"});
 Object.assign(translations.ar,{imageZoom:"تكبير الصورة",imageZoom100:"عادي (100%)",imageZoom90:"تصغير بسيط (90%)",imageZoom80:"تصغير متوسط (80%)",imageZoom70:"تصغير كبير (70%)",imageZoomSaveFailed:"تعذر حفظ مستوى تكبير الصورة"});
@@ -1619,7 +1621,55 @@ productColorHex.addEventListener("keydown",event=>{if(event.key==="Enter"){event
 productColorSwatches.addEventListener("click",event=>{const button=event.target.closest("[data-color-index]");if(button)removeProductColor(Number(button.dataset.colorIndex))});
 function edit(id){const p=allProducts.find(x=>x.id==id);if(!p)return;pid.value=p.id;pn.value=p.name;psd.value=p.short_description||"";pd.value=p.description;pc.value=p.category_id||"";pp.value=p.price;pCost.value=p.cost_price??"";pDelivery.value=p.delivery_price??0;po.value=p.old_price??"";ps.value=p.stock;pColors.value=Array.isArray(p.colors)?p.colors.join(", "):"";renderProductColors();pAdvertised.checked=Boolean(p.advertised);pNewProducts.checked=Boolean(p.show_new_products);pBestSellers.checked=Boolean(p.show_best_sellers);hideFromStoreCheckbox.checked=p.storefront_visible===false;const productZoom=[70,80,90,100].includes(Number(p.zoom_percent))?Number(p.zoom_percent):100;productZoomSelect.value=String(productZoom);productZoomSelect.dataset.previousZoom=String(productZoom);formTitle.textContent=t("editProduct");currentImages.innerHTML=p.images.map((im,index)=>{const zoom=[70,80,90,100].includes(Number(im.zoom_percent))?Number(im.zoom_percent):100;return `<span class="product-image-setting" style="display:flex;flex-direction:column;align-items:center;gap:3px"><img class="thumb" src="${esc(im.path)}" alt="${esc(p.name)}" onclick="previewImage('${esc(im.path)}','${esc(p.name)}')"><label class="image-zoom-control" style="display:flex;flex-direction:column;align-items:center;font-size:11px"><span data-image-zoom-label>${t("imageZoom")}</span><select style="width:auto;margin:0;padding:4px 6px;font-size:12px" data-image-zoom data-image-id="${im.id}" data-image-index="${index+1}" data-previous-zoom="${zoom}" aria-label="${t("imageZoom")} ${index+1}"><option data-zoom-label="imageZoom100" value="100" ${zoom===100?"selected":""}>${t("imageZoom100")}</option><option data-zoom-label="imageZoom90" value="90" ${zoom===90?"selected":""}>${t("imageZoom90")}</option><option data-zoom-label="imageZoom80" value="80" ${zoom===80?"selected":""}>${t("imageZoom80")}</option><option data-zoom-label="imageZoom70" value="70" ${zoom===70?"selected":""}>${t("imageZoom70")}</option></select></label><button class="danger" onclick="delImage(${p.id},${im.id})">×</button></span>`}).join("");openProductForm()}
 function resetForm(){pid.value="";pn.value="";psd.value="";pd.value="";pc.value="";pp.value="";pCost.value="";pDelivery.value="0";po.value="";ps.value="";pColors.value="";productColorPicker.value="#C99A3B";productColorHex.value="#C99A3B";renderProductColors();pAdvertised.checked=false;pNewProducts.checked=false;pBestSellers.checked=false;hideFromStoreCheckbox.checked=false;productZoomSelect.value="100";productZoomSelect.dataset.previousZoom="100";pi.value="";formTitle.textContent=t("createProduct");currentImages.innerHTML=""}
-async function saveProduct(){const fd=new FormData();fd.append("name",pn.value);fd.append("short_description",psd.value);fd.append("description",pd.value);fd.append("category_id",pc.value);fd.append("price",pp.value);fd.append("cost_price",pCost.value);fd.append("delivery_price",pDelivery.value);fd.append("old_price",po.value);fd.append("stock",ps.value);fd.append("colors",pColors.value);fd.append("advertised",pAdvertised.checked?"true":"false");fd.append("show_new_products",pNewProducts.checked?"true":"false");fd.append("show_best_sellers",pBestSellers.checked?"true":"false");fd.append("storefront_visible",hideFromStoreCheckbox.checked?"false":"true");fd.append("zoom_percent",productZoomSelect.value);[...pi.files].forEach(f=>fd.append("images",f));const id=pid.value;const r=await api(id?"/api/products/"+id:"/api/products",{method:id?"PUT":"POST",body:fd});const x=await r.json();if(!r.ok)return alert(x.error);resetForm();closeProductForm();await Promise.all([productsLoad(),catsLoad(),inventoryLoad()]);stats()}
+async function saveProduct(){
+  if(saveProductBtn.disabled)return;
+  if(!pn.value.trim()){alert(t("productNameRequired"));pn.focus();return}
+  const price=pp.value.trim();
+  if(price===""||!Number.isFinite(Number(price))||Number(price)<0){alert(t("productPriceRequired"));pp.focus();return}
+  const fd=new FormData();
+  fd.append("name",pn.value);
+  fd.append("short_description",psd.value);
+  fd.append("description",pd.value);
+  fd.append("category_id",pc.value);
+  fd.append("price",price);
+  fd.append("cost_price",pCost.value);
+  fd.append("delivery_price",pDelivery.value);
+  fd.append("old_price",po.value);
+  fd.append("stock",ps.value);
+  fd.append("colors",pColors.value);
+  fd.append("advertised",pAdvertised.checked?"true":"false");
+  fd.append("show_new_products",pNewProducts.checked?"true":"false");
+  fd.append("show_best_sellers",pBestSellers.checked?"true":"false");
+  fd.append("storefront_visible",hideFromStoreCheckbox.checked?"false":"true");
+  fd.append("zoom_percent",productZoomSelect.value);
+  [...pi.files].forEach(file=>fd.append("images",file));
+  const id=pid.value;
+  saveProductBtn.disabled=true;
+  saveProductBtn.setAttribute("aria-busy","true");
+  saveProductBtn.textContent=t("savingProduct");
+  try{
+    const response=await api(id?"/api/products/"+id:"/api/products",{method:id?"PUT":"POST",body:fd});
+    const result=await response.json();
+    if(!response.ok){alert(result.error||t("productSaveFailed"));return}
+  }catch(error){
+    console.error("Could not save product:",error);
+    alert(t("productSaveFailed"));
+    return;
+  }finally{
+    saveProductBtn.disabled=false;
+    saveProductBtn.removeAttribute("aria-busy");
+    saveProductBtn.textContent=t("saveProduct");
+  }
+  resetForm();
+  closeProductForm();
+  try{
+    await Promise.all([productsLoad(),catsLoad(),inventoryLoad()]);
+    await stats();
+  }catch(error){
+    console.error("Product saved but the admin dashboard could not refresh:",error);
+    alert(t("productSavedRefreshFailed"));
+  }
+}
 async function delImage(pid,id){if(!confirm(t("deleteImageConfirm")))return;const r=await api(`/api/products/${pid}/images/${id}`,{method:"DELETE"});const x=await r.json();if(!r.ok)return alert(x.error);productsLoad()}
 currentImages.addEventListener("change",async event=>{
   const select=event.target.closest("[data-image-zoom]");
