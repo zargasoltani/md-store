@@ -1912,8 +1912,9 @@ function openFeaturedProduct(){
 	document.getElementById("products").scrollIntoView({behavior:"smooth"});
 }
 function changeFeaturedSlide(delta){
-	if(featuredProducts.length<2)return;
-	showAdvertisement((featuredProductIndex+delta+featuredProducts.length)%featuredProducts.length);
+	const advertisedProducts=featuredProducts.filter(product=>product.advertised);
+	if(advertisedProducts.length<2)return;
+	showAdvertisement((featuredProductIndex+delta+advertisedProducts.length)%advertisedProducts.length);
 }
 function updateHeroBrandMark(hasProductImage){
 	const logoUrl=cfg.heroLogoUrl||"";
@@ -2001,7 +2002,8 @@ function showAdvertisement(index){
 	const heroProductOld=document.getElementById("heroProductOld");
 	const heroProductDelivery=document.getElementById("heroProductDelivery");
 	const heroBuyButton=document.getElementById("heroBuyButton");
-	if(!featuredProducts.length){
+	const advertisedProducts=featuredProducts.filter(product=>product.advertised);
+	if(!advertisedProducts.length){
 		featuredProduct=null;
 		featuredProductIndex=0;
 		if(heroProductImage){heroProductImage.hidden=true;heroProductImage.removeAttribute("src");}
@@ -2014,8 +2016,8 @@ function showAdvertisement(index){
 		renderHeroDots();
 		return;
 	}
-	featuredProductIndex=(index+featuredProducts.length)%featuredProducts.length;
-	featuredProduct=featuredProducts[featuredProductIndex];
+	featuredProductIndex=(index+advertisedProducts.length)%advertisedProducts.length;
+	featuredProduct=advertisedProducts[featuredProductIndex];
 	const image=featuredProduct.images?.[0]?.path;
 	if(heroProductImage){heroProductImage.hidden=!image;}
 	updateHeroBrandMark(Boolean(image));
@@ -2042,7 +2044,7 @@ async function loadAdvertisement(){
 		renderNewArrivals();
 		renderManualHomepageSections();
 		if(advertisementTimer)clearInterval(advertisementTimer);
-		if(featuredProducts.length>1&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)advertisementTimer=setInterval(()=>changeFeaturedSlide(1),7000);
+		if(featuredProducts.filter(product=>product.advertised).length>1&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)advertisementTimer=setInterval(()=>changeFeaturedSlide(1),7000);
 	}catch(error){
 		console.error("Could not load featured products:",error);
 		showAdvertisement(0);
