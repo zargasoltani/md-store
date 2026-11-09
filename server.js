@@ -142,7 +142,7 @@ async function serveStorePage(req, res, requestedProductId, requestedSlug = "") 
         } catch (error) {
           if (error.code !== "ENOENT") throw error;
         }
-      } else if (typeof product.image === "string" && /^\/api\/product-images\/[1-9]\d*$/.test(product.image)) {
+      } else if (typeof product.image === "string" && /^\/api\/products\/[1-9]\d*\/images\/[1-9]\d*$/.test(product.image)) {
         image = product.image;
       }
     }
