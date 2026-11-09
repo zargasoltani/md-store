@@ -583,6 +583,11 @@ const DEFAULT_HOMEPAGE_SECTIONS = [
   { id: "new_products", title: "Nouveautés", subtitle: "Fraîchement arrivés", enabled: true, order: 2, productCount: 12 },
   { id: "best_sellers", title: "Meilleures ventes", subtitle: "Sélection M&D", enabled: true, order: 3, productCount: 12 }
 ];
+const DEFAULT_FEATURED_IMAGE_SLIDER_SETTINGS = {
+  autoplay: true,
+  intervalSeconds: 7,
+  showArrows: true
+};
 const MANUAL_HOMEPAGE_SECTION_TYPES = new Set([
   "hero_banner",
   "new_products",
@@ -715,6 +720,21 @@ function parseHomepageSections(value) {
   });
 }
 
+function parseFeaturedImageSliderSettings(value) {
+  if (value === undefined) return { ...DEFAULT_FEATURED_IMAGE_SLIDER_SETTINGS };
+  const settings = JSON.parse(value);
+  if (!settings || typeof settings.autoplay !== "boolean" ||
+    ![3, 5, 7, 10].includes(settings.intervalSeconds) ||
+    typeof settings.showArrows !== "boolean") {
+    throw new Error("Saved featured image slider settings are invalid");
+  }
+  return {
+    autoplay: settings.autoplay,
+    intervalSeconds: settings.intervalSeconds,
+    showArrows: settings.showArrows
+  };
+}
+
 function parseCampaignImageIds(value) {
   const ids = JSON.parse(value || "[]");
   if (!Array.isArray(ids) || ids.some(id => typeof id !== "string" || !/^[a-f0-9]{32}$/.test(id))) {
@@ -766,6 +786,7 @@ app.get("/api/config", async (req, res) => {
       productColumns: Number.isInteger(productColumns) && productColumns >= 2 && productColumns <= 6 ? productColumns : 4,
       categoryColumns: Number.isInteger(categoryColumns) && categoryColumns >= 2 && categoryColumns <= 6 ? categoryColumns : 4,
       homepageSections: parseHomepageSections(settings.homepage_sections),
+      featuredImageSlider: parseFeaturedImageSliderSettings(settings.featured_image_slider),
       manualHomepageSections: parseManualHomepageSections(settings.manual_homepage_sections),
       store: STORE,
       currency: CURRENCY
@@ -1033,6 +1054,7 @@ app.get("/api/admin/settings", auth, role("admin"), async (req, res) => {
       product_columns: settings.draft_product_columns ?? settings.product_columns ?? "4",
       category_columns: settings.draft_category_columns ?? settings.category_columns ?? "4",
       homepage_sections: parseHomepageSections(settings.homepage_sections),
+      featured_image_slider: parseFeaturedImageSliderSettings(settings.featured_image_slider),
       manual_homepage_sections: parseManualHomepageSections(settings.manual_homepage_sections),
       hero_settings_has_draft: HERO_DRAFT_SETTINGS.some(key => settings[`draft_${key}`] !== undefined) ||
         settings.draft_campaign_images !== undefined
@@ -1096,6 +1118,26 @@ app.put("/api/admin/homepage-sections", auth, role("admin"), async (req, res) =>
   } catch (error) {
     console.error("Could not save homepage section settings:", error);
     res.status(500).json({ error: "Could not save homepage section settings" });
+  }
+});
+
+app.put("/api/admin/featured-image-slider-settings", auth, role("admin"), async (req, res) => {
+  const { autoplay, intervalSeconds, showArrows } = req.body || {};
+  if (typeof autoplay !== "boolean" || ![3, 5, 7, 10].includes(intervalSeconds) ||
+    typeof showArrows !== "boolean") {
+    return res.status(400).json({ error: "Invalid featured image slider settings" });
+  }
+  const settings = { autoplay, intervalSeconds, showArrows };
+  try {
+    await pool.query(
+      `INSERT INTO store_settings(key, value) VALUES('featured_image_slider', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [JSON.stringify(settings)]
+    );
+    res.json({ ok: true, featured_image_slider: settings });
+  } catch (error) {
+    console.error("Could not save featured image slider settings:", error);
+    res.status(500).json({ error: "Could not save featured image slider settings" });
   }
 });
 

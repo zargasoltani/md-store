@@ -273,6 +273,14 @@ body.dark .chart-controls button[aria-pressed="true"]{box-shadow:0 2px 7px #0004
 <div hidden aria-hidden="true"><span id="newProductsSectionLabel"></span><span id="bestSellersSectionLabel"></span><span id="sectionTitleLabel"></span><span id="sectionTitleLabel2"></span><span id="sectionSubtitleLabel"></span><span id="sectionSubtitleLabel2"></span><span id="sectionOrderLabel"></span><span id="sectionOrderLabel2"></span><span id="sectionProductCountLabel"></span><span id="sectionProductCountLabel2"></span><span id="sectionEnabledLabel"></span><span id="sectionEnabledLabel2"></span></div>
 <div class="homepage-sections-list" id="homepageSectionsList"></div>
 <div class="hero-background-actions"><button class="gold" id="saveHomepageSectionsBtn" type="button" onclick="saveHomepageSections()">حفظ أقسام الصفحة الرئيسية</button></div>
+<div class="homepage-section-row" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:14px" aria-labelledby="featuredImageSliderTitle">
+<h4 id="featuredImageSliderTitle" data-admin-i18n="featuredImageSliderTitle">إعدادات سلايدر صور المنتج المميز</h4>
+<p class="settings-hint" style="grid-column:1/-1" data-admin-i18n="featuredImageSliderHint">تحكم في التشغيل التلقائي، مدة عرض كل صورة، وإظهار أسهم التنقل.</p>
+<label class="homepage-section-enabled"><input id="featuredImageSliderAutoplay" type="checkbox" checked><span data-admin-i18n="featuredImageSliderAutoplay">التشغيل التلقائي</span></label>
+<label><span data-admin-i18n="featuredImageSliderInterval">مدة عرض كل صورة</span><select id="featuredImageSliderInterval"><option value="3" data-admin-i18n="sliderSeconds3">3 ثوانٍ</option><option value="5" data-admin-i18n="sliderSeconds5">5 ثوانٍ</option><option value="7" selected data-admin-i18n="sliderSeconds7">7 ثوانٍ</option><option value="10" data-admin-i18n="sliderSeconds10">10 ثوانٍ</option></select></label>
+<label class="homepage-section-enabled"><input id="featuredImageSliderArrows" type="checkbox" checked><span data-admin-i18n="featuredImageSliderArrows">إظهار أسهم التنقل</span></label>
+<div class="hero-background-actions" style="grid-column:1/-1"><button class="gold" id="saveFeaturedImageSliderBtn" type="button" onclick="saveFeaturedImageSliderSettings()" data-admin-i18n="saveFeaturedImageSlider">حفظ إعدادات السلايدر</button></div>
+</div>
 </section>
 <section class="manual-homepage-sections" aria-labelledby="manualHomepageSectionsTitle">
 <h3 id="manualHomepageSectionsTitle">Sections manuelles</h3>
@@ -385,6 +393,8 @@ Object.assign(translations.ar,{productColumnsLabel:"عدد أعمدة المنت
 Object.assign(translations.fr,{productColumnsLabel:"Nombre de colonnes de produits sur grand écran"});
 Object.assign(translations.ar,{categoryColumnsLabel:"عدد أعمدة الأقسام على الشاشات الكبيرة"});
 Object.assign(translations.fr,{categoryColumnsLabel:"Nombre de colonnes de catégories sur grand écran"});
+Object.assign(translations.ar,{featuredImageSliderTitle:"إعدادات سلايدر صور المنتج المميز",featuredImageSliderHint:"تحكم في التشغيل التلقائي، مدة عرض كل صورة، وإظهار أسهم التنقل.",featuredImageSliderAutoplay:"التشغيل التلقائي",featuredImageSliderInterval:"مدة عرض كل صورة",featuredImageSliderArrows:"إظهار أسهم التنقل",saveFeaturedImageSlider:"حفظ إعدادات السلايدر",featuredImageSliderSaved:"تم حفظ إعدادات السلايدر",featuredImageSliderFailed:"تعذر حفظ إعدادات السلايدر",sliderSeconds3:"3 ثوانٍ",sliderSeconds5:"5 ثوانٍ",sliderSeconds7:"7 ثوانٍ",sliderSeconds10:"10 ثوانٍ"});
+Object.assign(translations.fr,{featuredImageSliderTitle:"Réglages du carrousel d’images du produit vedette",featuredImageSliderHint:"Réglez la lecture automatique, la durée de chaque image et l’affichage des flèches.",featuredImageSliderAutoplay:"Lecture automatique",featuredImageSliderInterval:"Durée d’affichage de chaque image",featuredImageSliderArrows:"Afficher les flèches de navigation",saveFeaturedImageSlider:"Enregistrer les réglages du carrousel",featuredImageSliderSaved:"Réglages du carrousel enregistrés",featuredImageSliderFailed:"Impossible d’enregistrer les réglages du carrousel",sliderSeconds3:"3 secondes",sliderSeconds5:"5 secondes",sliderSeconds7:"7 secondes",sliderSeconds10:"10 secondes"});
 Object.assign(translations.ar,{homepageSectionsTitle:"إدارة أقسام الصفحة الرئيسية",homepageSectionsHint:"أظهر أو أخفِ الأقسام، وعدّل عناوينها وترتيبها. تضاف الأقسام الجديدة إلى هذه القائمة تلقائيًا.",categoryShowcaseSection:"اكتشفوا عوالمنا",newProductsSection:"المنتجات الجديدة",bestSellersSection:"الأكثر مبيعاً",sectionTitle:"العنوان",sectionSubtitle:"العنوان الفرعي",sectionOrder:"الترتيب",sectionProductCount:"عدد المنتجات المعروضة",sectionEnabled:"إظهار القسم",saveHomepageSections:"حفظ أقسام الصفحة الرئيسية",homepageSectionsSaved:"تم حفظ إعدادات أقسام الصفحة الرئيسية",homepageSectionsFailed:"تعذر حفظ إعدادات أقسام الصفحة الرئيسية",homepageSectionsOrderInvalid:"يجب إدخال ترتيب مختلف لكل قسم من 1 إلى {count}"});
 Object.assign(translations.fr,{homepageSectionsTitle:"Gérer les sections de la page d’accueil",homepageSectionsHint:"Affichez ou masquez les sections, modifiez leurs titres et leur ordre. Les nouvelles sections apparaîtront automatiquement dans cette liste.",categoryShowcaseSection:"Explorez nos univers",newProductsSection:"Nouveautés",bestSellersSection:"Meilleures ventes",sectionTitle:"Titre",sectionSubtitle:"Sous-titre",sectionOrder:"Ordre",sectionProductCount:"Nombre de produits affichés",sectionEnabled:"Afficher la section",saveHomepageSections:"Enregistrer les sections",homepageSectionsSaved:"Paramètres des sections enregistrés",homepageSectionsFailed:"Impossible d’enregistrer les paramètres des sections",homepageSectionsOrderInvalid:"Attribuez un ordre différent à chaque section, de 1 à {count}"});
 Object.assign(translations.ar,{manualHomepageSectionsTitle:"الأقسام اليدوية",manualHomepageSectionsHint:"أنشئ أقسامًا مستقلة بمحتوى وصورة ورابط من اختيارك.",manualHomepageSectionAdd:"إضافة قسم",manualHomepageSectionsSave:"حفظ الأقسام اليدوية",manualHomepageSectionsSaved:"تم حفظ الأقسام اليدوية",manualHomepageSectionsFailed:"تعذر حفظ الأقسام اليدوية",manualHomepageSectionsLimit:"الحد الأقصى 30 قسمًا يدويًا",manualSectionRemove:"حذف القسم",manualSectionType:"نوع القسم",manualSectionTypeHero:"بانر رئيسي",manualSectionTypeNew:"المنتجات الجديدة",manualSectionTypeBest:"الأكثر مبيعًا",manualSectionTypeCategories:"اكتشفوا عوالمنا",manualSectionTypeFeatured:"منتجات مميزة",manualSectionTypePromotions:"العروض",manualSectionTypeManual:"يدوي مخصص",manualSectionImage:"اختر صورة",manualSectionImagePosition:"موضع الصورة",manualSectionImageCenter:"وسط",manualSectionImageLeft:"يسار",manualSectionImageRight:"يمين",manualSectionVerticalPosition:"الارتفاع",manualSectionVerticalTop:"أعلى",manualSectionVerticalCenter:"وسط",manualSectionVerticalBottom:"أسفل",manualSectionImageRequired:"اختر صورة للقسم اليدوي أو البانر.",manualSectionButtonText:"نص الزر",manualSectionButtonLink:"رابط الزر",manualSectionProductCount:"عدد المنتجات",manualSectionInvalidOrder:"يجب أن يكون ترتيب الأقسام اليدوية متتابعًا وفريدًا"});
@@ -471,6 +481,7 @@ function toggleTheme(){darkMode=!darkMode;applyTheme()}
 function updateLanguageToggle(){const target=currentLang==="ar"?"fr":"ar",label=target==="fr"?"FR":"AR",accessibleLabel=target==="fr"?"Passer au français":"التبديل إلى العربية";languageTarget.textContent=label;langToggle.setAttribute("aria-label",accessibleLabel);langToggle.title=accessibleLabel;loginLanguageTarget.textContent=label;loginLangToggle.setAttribute("aria-label",accessibleLabel);loginLangToggle.title=accessibleLabel}
 function toggleLang(){if(navigationLinksLoaded)navigationLinks=readNavigationLinks();if(categoryIconDefinitions.length)categoryIconDefinitions=readCategoryIconDefinitions();currentLang=currentLang==="ar"?"fr":"ar";localStorage.setItem("md_lang",currentLang);document.documentElement.lang=currentLang;document.documentElement.dir=currentLang==="ar"?"rtl":"ltr";updateLanguageToggle();applyStaticTexts();renderCategories();renderCategoryIconManager();renderProductsTable();renderOrdersTable();renderShipmentsTable();renderCustomersTable();renderUsersTable();renderAuditTable();renderInventoryReport();stats();if(activeHistoryOrderId)loadOrderHistory(activeHistoryOrderId)}
 function applyStaticTexts(){
+  document.querySelectorAll("[data-admin-i18n]").forEach(element=>{element.textContent=t(element.dataset.adminI18n)});
   loginTitle.textContent=t("loginTitle");loginUsernameLabel.textContent=t("username");loginPasswordLabel.textContent=t("password");loginBack.textContent=`← ${t("returnToStore")}`;loginPasswordToggle.setAttribute("aria-label",t(document.getElementById("p").type==="password"?"showPassword":"hidePassword"));
   closeStoreSettingsBtn.setAttribute("aria-label",t("closeStoreSettings"));
   document.querySelectorAll(".dashboard-section-modal .modal-head button").forEach(button=>button.setAttribute("aria-label",t("closeSection")));
@@ -593,6 +604,9 @@ async function storeSettingsLoad(){
   const response=await api("/api/admin/settings"),settings=await response.json();
   if(!response.ok)throw new Error(settings.error||t("settingsFailed"));
   settingsWhatsapp.value=settings.whatsapp;settingsPhone.value=settings.contact_phone;settingsEmail.value=settings.contact_email;settingsAddress.value=settings.contact_address;settingsHours.value=settings.opening_hours;settingsFacebook.value=settings.social_facebook;settingsInstagram.value=settings.social_instagram;settingsTiktok.value=settings.social_tiktok;settingsProductColumns.value=settings.product_columns;settingsCategoryColumns.value=settings.category_columns;
+  document.getElementById("featuredImageSliderAutoplay").checked=settings.featured_image_slider.autoplay;
+  document.getElementById("featuredImageSliderInterval").value=String(settings.featured_image_slider.intervalSeconds);
+  document.getElementById("featuredImageSliderArrows").checked=settings.featured_image_slider.showArrows;
   renderHomepageSectionSettings(settings.homepage_sections);
   renderManualHomepageSections(settings.manual_homepage_sections);
   heroBackgroundUrl.value=settings.hero_background_url;heroCardX.value=settings.hero_card_x;heroCardY.value=settings.hero_card_y;heroOverlay.value=settings.hero_overlay;heroPriceSize.value=settings.hero_price_size;updateHeroSettingValues();updateHeroBackgroundPreview();
@@ -694,6 +708,26 @@ async function saveHomepageSections(){
   }catch(error){
     console.error("Could not save homepage section settings:",error);
     alert(error.message||t("homepageSectionsFailed"));
+  }finally{
+    button.disabled=false;
+  }
+}
+async function saveFeaturedImageSliderSettings(){
+  const button=document.getElementById("saveFeaturedImageSliderBtn");
+  button.disabled=true;
+  try{
+    const settings={
+      autoplay:document.getElementById("featuredImageSliderAutoplay").checked,
+      intervalSeconds:Number(document.getElementById("featuredImageSliderInterval").value),
+      showArrows:document.getElementById("featuredImageSliderArrows").checked
+    };
+    const response=await api("/api/admin/featured-image-slider-settings",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(settings)});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||t("featuredImageSliderFailed"));
+    showToast(t("featuredImageSliderSaved"));
+  }catch(error){
+    console.error("Could not save featured image slider settings:",error);
+    alert(error.message||t("featuredImageSliderFailed"));
   }finally{
     button.disabled=false;
   }
