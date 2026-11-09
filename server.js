@@ -103,7 +103,7 @@ async function serveStorePage(req, res, requestedProductId, requestedSlug = "") 
   if (/^[1-9]\d*$/.test(requestedId) && Number.isSafeInteger(Number(requestedId))) {
     const result = await pool.query(
       `SELECT p.id, p.name, p.description,
-         (SELECT path FROM product_images WHERE product_id = p.id ORDER BY id LIMIT 1) AS image
+         (SELECT path FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, id LIMIT 1) AS image
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN categories parent ON parent.id = c.parent_id
@@ -312,12 +312,18 @@ class OrderValidationError extends Error {}
 class InventoryAvailabilityError extends Error {}
 
 async function insertProductImages(client, productId, files = [], zoomPercent = 100) {
+  const primaryImage = await client.query(
+    "SELECT EXISTS(SELECT 1 FROM product_images WHERE product_id = $1 AND is_primary = TRUE) AS has_primary",
+    [productId]
+  );
+  let hasPrimaryImage = primaryImage.rows[0].has_primary;
   for (const file of files) {
     const result = await client.query(
-      `INSERT INTO product_images(product_id, path, image_data, content_type, zoom_percent)
-       VALUES($1, '', $2, $3, $4) RETURNING id`,
-      [productId, file.buffer, file.mimetype, zoomPercent]
+      `INSERT INTO product_images(product_id, path, image_data, content_type, zoom_percent, is_primary)
+       VALUES($1, '', $2, $3, $4, $5) RETURNING id`,
+      [productId, file.buffer, file.mimetype, zoomPercent, !hasPrimaryImage]
     );
+    hasPrimaryImage = true;
     const imagePath = `/api/product-images/${result.rows[0].id}`;
     await client.query("UPDATE product_images SET path = $1 WHERE id = $2", [imagePath, result.rows[0].id]);
   }
@@ -462,14 +468,15 @@ async function productRows(includeInactive = false, includeStoreHidden = false) 
        THEN p.sort_order END ASC NULLS LAST,
        ${includeInactive ? "p.id DESC" : "COALESCE(sales.units_sold, 0) DESC, p.id DESC"}`
   );
-  const images = await pool.query("SELECT id, product_id, path, zoom_percent FROM product_images ORDER BY id");
+  const images = await pool.query("SELECT id, product_id, path, zoom_percent, is_primary FROM product_images ORDER BY is_primary DESC, id");
   const imagesByProduct = new Map();
   for (const image of images.rows) {
     if (!imagesByProduct.has(image.product_id)) imagesByProduct.set(image.product_id, []);
     imagesByProduct.get(image.product_id).push({
       id: image.id,
       path: image.path,
-      zoom_percent: image.zoom_percent
+      zoom_percent: image.zoom_percent,
+      is_primary: image.is_primary
     });
   }
   const adminImageExpiry = includeStoreHidden ? Date.now() + 60 * 60 * 1000 : null;
@@ -2135,18 +2142,87 @@ app.delete("/api/products/:id", auth, role("admin", "manager"), async (req, res)
   res.json({ ok: true });
 });
 app.delete("/api/products/:id/images/:imageId", auth, role("admin", "manager"), async (req, res) => {
-  const result = await pool.query(
-    `DELETE FROM product_images image
-     WHERE image.id = $1 AND image.product_id = $2
-       AND ($3::boolean OR EXISTS (
-         SELECT 1 FROM products product
-         WHERE product.id = image.product_id AND product.storefront_visible = TRUE
-       ))
-     RETURNING image.id`,
-    [req.params.imageId, req.params.id, req.admin.role === "admin"]
-  );
-  if (!result.rowCount) return res.status(404).json({ error: "الصورة غير موجودة" });
-  res.json({ ok: true });
+  const productId = Number(req.params.id);
+  const imageId = Number(req.params.imageId);
+  if (!Number.isInteger(productId) || productId < 1 || !Number.isInteger(imageId) || imageId < 1) {
+    return res.status(400).json({ error: "معرّف الصورة غير صالح" });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(
+      `DELETE FROM product_images image
+       WHERE image.id = $1 AND image.product_id = $2
+         AND ($3::boolean OR EXISTS (
+           SELECT 1 FROM products product
+           WHERE product.id = image.product_id AND product.storefront_visible = TRUE
+         ))
+       RETURNING image.product_id, image.is_primary`,
+      [imageId, productId, req.admin.role === "admin"]
+    );
+    if (!result.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "الصورة غير موجودة" });
+    }
+    if (result.rows[0].is_primary) {
+      await client.query(
+        `UPDATE product_images SET is_primary = TRUE
+         WHERE id = (SELECT id FROM product_images WHERE product_id = $1 ORDER BY id LIMIT 1)`,
+        [productId]
+      );
+    }
+    await client.query("COMMIT");
+    res.json({ ok: true });
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("Could not roll back product image deletion:", rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+});
+app.put("/api/products/:id/images/:imageId/primary", auth, role("admin", "manager"), async (req, res) => {
+  const productId = Number(req.params.id);
+  const imageId = Number(req.params.imageId);
+  if (!Number.isInteger(productId) || productId < 1 || !Number.isInteger(imageId) || imageId < 1) {
+    return res.status(400).json({ error: "معرّف الصورة غير صالح" });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const product = await client.query(
+      `SELECT id FROM products WHERE id = $1 AND ($2::boolean OR storefront_visible = TRUE) FOR UPDATE`,
+      [productId, req.admin.role === "admin"]
+    );
+    if (!product.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "المنتج غير موجود" });
+    }
+    const image = await client.query(
+      "SELECT id FROM product_images WHERE id = $1 AND product_id = $2",
+      [imageId, productId]
+    );
+    if (!image.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "الصورة غير موجودة" });
+    }
+    await client.query("UPDATE product_images SET is_primary = FALSE WHERE product_id = $1", [productId]);
+    await client.query("UPDATE product_images SET is_primary = TRUE WHERE id = $1", [imageId]);
+    await client.query("COMMIT");
+    res.json({ ok: true });
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("Could not roll back primary product image update:", rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 });
 app.put("/api/products/:id/images/:imageId/zoom", auth, role("admin", "manager"), async (req, res) => {
   const productId = Number(req.params.id);
@@ -3164,6 +3240,15 @@ async function initializeDatabase() {
     ALTER TABLE product_images ADD COLUMN IF NOT EXISTS zoom_percent INTEGER NOT NULL DEFAULT 100 CHECK (zoom_percent IN (70, 80, 90, 100));
     ALTER TABLE product_images ADD COLUMN IF NOT EXISTS image_data BYTEA;
     ALTER TABLE product_images ADD COLUMN IF NOT EXISTS content_type TEXT;
+    ALTER TABLE product_images ADD COLUMN IF NOT EXISTS is_primary BOOLEAN NOT NULL DEFAULT FALSE;
+    WITH ranked_images AS (
+      SELECT id, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY is_primary DESC, id) AS image_rank
+      FROM product_images
+    )
+    UPDATE product_images image SET is_primary = (ranked_images.image_rank = 1)
+    FROM ranked_images WHERE image.id = ranked_images.id;
+    CREATE UNIQUE INDEX IF NOT EXISTS product_images_single_primary_idx
+      ON product_images(product_id) WHERE is_primary = TRUE;
     CREATE TABLE IF NOT EXISTS customers (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
