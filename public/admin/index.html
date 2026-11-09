@@ -797,7 +797,11 @@ async function saveHomepageSectionOrder(){
   const button=document.getElementById("saveHomepageSectionOrderBtn");
   button.disabled=true;
   try{
-    const response=await api("/api/admin/homepage-section-order",{method:"PUT",body:{order}});
+    const response=await api("/api/admin/homepage-section-order",{
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({order})
+    });
     const result=await response.json();
     if(!response.ok)throw new Error(result.error||t("homepageSectionOrderFailed"));
     homepageSectionOrder=result.order;
