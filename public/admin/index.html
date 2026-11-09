@@ -297,7 +297,7 @@ body.dark .chart-controls button[aria-pressed="true"]{box-shadow:0 2px 7px #0004
 <div class="hero-slider-fields">
 <label><span id="heroBackgroundLabel">رابط صورة الخلفية</span><input id="heroBackgroundUrl" type="url" inputmode="url" maxlength="2000" placeholder="https://..." onchange="updateHeroBackgroundPreview()"></label>
 <label><span id="heroBackgroundFileLabel">أو اختر صورة لرفعها وحفظها (حتى 5 ميغابايت)</span><input id="heroBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewHeroBackgroundFile()"><img class="hero-background-preview" id="heroBackgroundPreview" alt="" hidden></label>
-<div class="campaign-image-manager"><label><span id="campaignImagesLabel">Importer des images dans le diaporama (5 Mo maximum par image)</span><input id="campaignImagesFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple></label><p class="campaign-image-count" id="campaignImageCount" aria-live="polite"></p><div class="hero-background-actions"><button type="button" id="uploadCampaignImagesBtn" onclick="uploadCampaignImages()">Ajouter au diaporama</button></div><div class="campaign-image-gallery" id="campaignImageGallery"></div></div>
+<div class="campaign-image-manager"><label><span id="campaignImagesLabel">Importer des images dans le diaporama (5 Mo maximum par image)</span><input id="campaignImagesFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple></label><p class="campaign-image-count" id="campaignImageCount" aria-live="polite"></p><div class="hero-background-actions"><button type="button" id="uploadCampaignImagesBtn" onclick="uploadCampaignImages()">Ajouter au diaporama</button><button type="button" class="danger" id="deleteAllCampaignImagesBtn" onclick="deleteAllCampaignImages()">Supprimer toutes les images importées</button></div><div class="campaign-image-gallery" id="campaignImageGallery"></div></div>
 <label><span id="heroCardXLabel">تحريك المحتوى أفقيًا</span><output id="heroCardXValue">0 px</output><input id="heroCardX" type="range" min="-200" max="200" step="5" value="0" oninput="updateHeroSettingValues()"></label>
 <label><span id="heroCardYLabel">تحريك المحتوى عموديًا</span><output id="heroCardYValue">0 px</output><input id="heroCardY" type="range" min="-200" max="200" step="5" value="0" oninput="updateHeroSettingValues()"></label>
 <label><span id="heroOverlayLabel">تعتيم الخلفية</span><output id="heroOverlayValue">15%</output><input id="heroOverlay" type="range" min="0" max="80" step="5" value="15" oninput="updateHeroSettingValues()"></label>
@@ -355,8 +355,8 @@ Object.assign(translations.ar,{deleteCustomer:"حذف العميل",deleteCustom
 Object.assign(translations.fr,{deleteCustomer:"Supprimer le client",deleteCustomerConfirm:"Supprimer le client {name} ?",deleteCustomerHasOrders:"Un client avec des commandes associées ne peut pas être supprimé",deleteCustomerFailed:"Impossible de supprimer le client"});
 Object.assign(translations.ar,{loginTitle:"مساحة الإدارة",returnToStore:"العودة إلى المتجر",showPassword:"إظهار كلمة المرور",hidePassword:"إخفاء كلمة المرور"});
 Object.assign(translations.fr,{loginTitle:"Espace administration",returnToStore:"Retour à la boutique",showPassword:"Afficher le mot de passe",hidePassword:"Masquer le mot de passe"});
-Object.assign(translations.ar,{campaignImagesLabel:"أضف صورًا إلى السلايدر (حتى 5 ميغابايت للصورة)",campaignImageCount:"{count} من 20 صورة في السلايدر",campaignImageSelection:"تم اختيار {count} صورة — اضغط على «إضافة إلى السلايدر» لحفظها",campaignImageSelectionInvalid:"الاختيار يتجاوز الحد المتاح أو يحتوي على ملف غير صالح",campaignImagesAdd:"إضافة إلى السلايدر",campaignImagesDelete:"حذف الصورة",campaignImagesDeleteConfirm:"هل تريد حذف هذه الصورة من السلايدر؟",campaignImagesUploaded:"تمت إضافة الصور إلى السلايدر",campaignImagesUploadFailed:"تعذرت إضافة الصور إلى السلايدر",campaignImagesLimit:"يسمح السلايدر بـ 20 صورة إجمالًا، بما فيها الصور الأربع الافتراضية"});
-Object.assign(translations.fr,{campaignImagesLabel:"Ajouter des images au diaporama (5 Mo maximum par image)",campaignImageCount:"{count} image(s) sur 20 dans le diaporama",campaignImageSelection:"{count} fichier(s) sélectionné(s) — cliquez sur « Ajouter au diaporama » pour les enregistrer",campaignImageSelectionInvalid:"La sélection dépasse la limite disponible ou contient un fichier invalide",campaignImagesAdd:"Ajouter au diaporama",campaignImagesDelete:"Supprimer l’image",campaignImagesDeleteConfirm:"Supprimer cette image du diaporama ?",campaignImagesUploaded:"Images ajoutées au diaporama",campaignImagesUploadFailed:"Impossible d’ajouter les images au diaporama",campaignImagesLimit:"Le diaporama est limité à 20 images au total, dont 4 images par défaut"});
+Object.assign(translations.ar,{campaignImagesLabel:"أضف صورًا إلى السلايدر (حتى 5 ميغابايت للصورة)",campaignImageCount:"{count} من 20 صورة في السلايدر",campaignImageSelection:"تم اختيار {count} صورة — اضغط على «إضافة إلى السلايدر» لحفظها",campaignImageSelectionInvalid:"الاختيار يتجاوز الحد المتاح أو يحتوي على ملف غير صالح",campaignImagesAdd:"إضافة إلى السلايدر",campaignImagesDelete:"حذف الصورة",campaignImagesDeleteConfirm:"هل تريد حذف هذه الصورة من السلايدر؟",campaignImagesDeleteAll:"حذف جميع صور السلايدر",campaignImagesDeleteAllConfirm:"حذف جميع الصور المرفوعة إلى السلايدر نهائيًا؟ لن تُحذف صور المنتجات.",campaignImagesDeletedAllDraft:"حُذفت صور السلايدر من المسودة؛ اضغط «تفعيل المسودات» لنشر التغيير.",campaignImagesUploaded:"تمت إضافة الصور إلى السلايدر",campaignImagesUploadFailed:"تعذرت إضافة الصور إلى السلايدر",campaignImagesLimit:"يسمح السلايدر بـ 20 صورة"});
+Object.assign(translations.fr,{campaignImagesLabel:"Ajouter des images au diaporama (5 Mo maximum par image)",campaignImageCount:"{count} image(s) sur 20 dans le diaporama",campaignImageSelection:"{count} fichier(s) sélectionné(s) — cliquez sur « Ajouter au diaporama » pour les enregistrer",campaignImageSelectionInvalid:"La sélection dépasse la limite disponible ou contient un fichier invalide",campaignImagesAdd:"Ajouter au diaporama",campaignImagesDelete:"Supprimer l’image",campaignImagesDeleteConfirm:"Supprimer cette image du diaporama ?",campaignImagesDeleteAll:"Supprimer toutes les images",campaignImagesDeleteAllConfirm:"Supprimer définitivement toutes les images importées dans le diaporama ? Les photos des produits ne seront pas supprimées.",campaignImagesDeletedAllDraft:"Images du diaporama supprimées du brouillon ; activez les modifications pour les publier.",campaignImagesUploaded:"Images ajoutées au diaporama",campaignImagesUploadFailed:"Impossible d’ajouter les images au diaporama",campaignImagesLimit:"Le diaporama est limité à 20 images"});
 Object.assign(translations.ar,{orderHistory:"سجل الطلب",history:"السجل",fromStatus:"من الحالة",toStatus:"إلى الحالة",changedBy:"بواسطة",adminHistory:"سجل إجراءات المسؤولين",refresh:"تحديث",method:"الطريقة",endpoint:"المسار",noHistory:"لا توجد أحداث مسجلة",auditManualHint:"اضغط على تحديث لعرض السجل.",auditLoadFailed:"تعذر تحميل سجل إجراءات المسؤولين",overviewLabel:"نظرة عامة على لوحة الإدارة",chartsLabel:"رسوم لوحة الإدارة",trendChartTitle:"الأداء خلال الفترة",trendChartSubtitle:"ملخص المبيعات والطلبات من بيانات الطلبات",chartMetricLabel:"مقياس الرسم البياني",chartRangeLabel:"الفترة الزمنية للرسم البياني",chartSales:"المبيعات",chartOrders:"الطلبات",statusChartTitle:"الطلبات حسب الحالة",statusChartSubtitle:"اضغط على حالة لتصفية جدول الطلبات",chartNoData:"لا توجد بيانات خلال هذه الفترة",chartNoOrdersStatus:"لا توجد طلبات",chartPeriodDays:"آخر {days} يومًا"});
 Object.assign(translations.fr,{orderHistory:"Historique de la commande",history:"Historique",fromStatus:"Ancien statut",toStatus:"Nouveau statut",changedBy:"Par",adminHistory:"Journal des actions administrateur",refresh:"Actualiser",method:"Méthode",endpoint:"Route",noHistory:"Aucun événement enregistré",auditManualHint:"Cliquez sur Actualiser pour afficher le journal d’activité",overviewLabel:"Vue d’ensemble du tableau de bord",chartsLabel:"Graphiques du tableau de bord",trendChartTitle:"Performance sur la période",trendChartSubtitle:"Ventes et commandes calculées à partir des commandes",chartMetricLabel:"Mesure du graphique",chartRangeLabel:"Période du graphique",chartSales:"Ventes",chartOrders:"Commandes",statusChartTitle:"Commandes par statut",statusChartSubtitle:"Cliquez sur un statut pour filtrer les commandes",chartNoData:"Aucune donnée sur cette période",chartNoOrdersStatus:"Aucune commande",chartPeriodDays:"{days} derniers jours"});
 Object.assign(translations.ar,{categoryName:"اسم القسم",categoryIcon:"الأيقونة",saveCategory:"حفظ",deleteCategory:"حذف",productCount:"المنتجات",activeCategory:"مفعّل",inactiveCategory:"معطّل",moveUp:"تحريك لأعلى",moveDown:"تحريك لأسفل",iconTag:"عام",iconClothing:"ملابس",iconBag:"حقائب",iconWatch:"ساعات",iconAccessory:"إكسسوارات",deleteCategoryConfirm:"حذف هذا القسم؟ سيتم إلغاء ربط {count} منتج به."});
@@ -465,7 +465,7 @@ function applyStaticTexts(){
   closeStoreSettingsBtn.setAttribute("aria-label",t("closeStoreSettings"));
   document.querySelectorAll(".dashboard-section-modal .modal-head button").forEach(button=>button.setAttribute("aria-label",t("closeSection")));
   renderHeroSettingsStatus();
-  campaignImagesLabel.textContent=t("campaignImagesLabel");uploadCampaignImagesBtn.textContent=t("campaignImagesAdd");renderCampaignImageManager();
+  campaignImagesLabel.textContent=t("campaignImagesLabel");uploadCampaignImagesBtn.textContent=t("campaignImagesAdd");deleteAllCampaignImagesBtn.textContent=t("campaignImagesDeleteAll");renderCampaignImageManager();
   document.title=`M&D Store — ${t("dashboardTitle")}`;dashboardTitle.textContent=t("dashboard");updateLanguageToggle();
   document.querySelector(".dashboard-overview").setAttribute("aria-label",t("overviewLabel"));document.querySelector(".dashboard-charts").setAttribute("aria-label",t("chartsLabel"));trendChartTitle.textContent=t("trendChartTitle");trendChartSubtitle.textContent=t("trendChartSubtitle");statusChartTitle.textContent=t("statusChartTitle");statusChartSubtitle.textContent=t("statusChartSubtitle");chartModeSales.textContent=t("chartSales");chartModeOrders.textContent=t("chartOrders");chartMetricControl.setAttribute("aria-label",t("chartMetricLabel"));chartRangeControl.setAttribute("aria-label",t("chartRangeLabel"));
   if(me)who.textContent=`${t("dashboardTitle")}: ${esc(me.username)} — ${t(me.role==="admin"?"adminRole":"managerRole")}`;
@@ -941,13 +941,13 @@ async function navigationLinkMove(index,direction){
   [links[index],links[target]]=[links[target],links[index]];
   await navigationLinksSave(links);
 }
-let campaignImages=[],campaignImagesUploading=false;
+let campaignImages=[],campaignImagesUploading=false,campaignImagesDeleting=false;
 function renderCampaignImageManager(){
   if(!document.getElementById("campaignImageGallery"))return;
-  const selectedFiles=[...campaignImagesFile.files],remaining=Math.max(0,20-4-campaignImages.length);
+  const selectedFiles=[...campaignImagesFile.files],remaining=Math.max(0,20-campaignImages.length);
   const supportedTypes=new Set(["image/jpeg","image/png","image/webp","image/gif"]);
   const selectionIsValid=selectedFiles.length<=remaining&&selectedFiles.every(file=>supportedTypes.has(file.type)&&file.size<=5*1024*1024);
-  const countText=t("campaignImageCount").replace("{count}",String(4+campaignImages.length));
+  const countText=t("campaignImageCount").replace("{count}",String(campaignImages.length));
   campaignImageCount.textContent=selectedFiles.length
     ?`${countText} — ${t(selectionIsValid?"campaignImageSelection":"campaignImageSelectionInvalid").replace("{count}",String(selectedFiles.length))}`
     :countText;
@@ -956,15 +956,16 @@ function renderCampaignImageManager(){
     if(!/^[a-f0-9]{32}$/.test(image.id))return;
     const item=document.createElement("div"),preview=document.createElement("img"),remove=document.createElement("button");
     item.className="campaign-image-item";preview.src=`/api/store-assets/campaign/${image.id}`;preview.alt=t("campaignImagesDelete");preview.loading="lazy";
-    remove.type="button";remove.textContent="×";remove.title=t("campaignImagesDelete");remove.setAttribute("aria-label",t("campaignImagesDelete"));remove.addEventListener("click",()=>deleteCampaignImage(image.id));
+    remove.type="button";remove.textContent="×";remove.title=t("campaignImagesDelete");remove.setAttribute("aria-label",t("campaignImagesDelete"));remove.disabled=campaignImagesDeleting||campaignImagesUploading;remove.addEventListener("click",()=>deleteCampaignImage(image.id));
     item.append(preview,remove);campaignImageGallery.append(item);
   });
-  campaignImagesFile.disabled=remaining===0||campaignImagesUploading;
-  uploadCampaignImagesBtn.disabled=remaining===0||!selectedFiles.length||!selectionIsValid||campaignImagesUploading;
+  campaignImagesFile.disabled=remaining===0||campaignImagesUploading||campaignImagesDeleting;
+  uploadCampaignImagesBtn.disabled=remaining===0||!selectedFiles.length||!selectionIsValid||campaignImagesUploading||campaignImagesDeleting;
+  deleteAllCampaignImagesBtn.disabled=!campaignImages.length||campaignImagesUploading||campaignImagesDeleting;
 }
 campaignImagesFile.addEventListener("change",renderCampaignImageManager);
 async function uploadCampaignImages(){
-  const files=[...campaignImagesFile.files],remaining=20-4-campaignImages.length;
+  const files=[...campaignImagesFile.files],remaining=20-campaignImages.length;
   if(!files.length)return;
   if(files.length>remaining){alert(t("campaignImagesLimit"));return}
   const supportedTypes=new Set(["image/jpeg","image/png","image/webp","image/gif"]);
@@ -995,6 +996,27 @@ async function deleteCampaignImage(id){
     campaignImages=result.campaign_images;markHeroSettingsDraft();renderCampaignImageManager();
   }catch(error){
     console.error("Could not delete campaign slideshow image:",error);alert(t("campaignImagesUploadFailed"));
+  }
+}
+async function deleteAllCampaignImages(){
+  if(campaignImagesDeleting||campaignImagesUploading||!campaignImages.length||!confirm(t("campaignImagesDeleteAllConfirm")))return;
+  campaignImagesDeleting=true;renderCampaignImageManager();
+  try{
+    while(campaignImages.length){
+      const id=campaignImages[0].id;
+      const response=await api(`/api/admin/settings/campaign-images/${encodeURIComponent(id)}`,{method:"DELETE"});
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||t("campaignImagesUploadFailed"));
+      campaignImages=result.campaign_images;
+    }
+    campaignImagesFile.value="";
+    markHeroSettingsDraft();
+    showToast(t("campaignImagesDeletedAllDraft"));
+  }catch(error){
+    console.error("Could not delete all campaign slideshow images:",error);
+    alert(error.message||t("campaignImagesUploadFailed"));
+  }finally{
+    campaignImagesDeleting=false;renderCampaignImageManager();
   }
 }
 function updateHeroSettingValues(){
