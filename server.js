@@ -1806,6 +1806,34 @@ app.get("/api/products", async (req, res) => {
 app.get("/api/admin/products", auth, async (req, res) =>
   res.json(await productRows(true, req.admin.role === "admin"))
 );
+app.get("/api/admin/products/:id/images", auth, async (req, res) => {
+  const productId = Number(req.params.id);
+  if (!Number.isInteger(productId) || productId < 1) {
+    return res.status(400).json({ error: "معرّف المنتج غير صالح" });
+  }
+  const product = await pool.query(
+    "SELECT storefront_visible FROM products WHERE id = $1 AND ($2::boolean OR storefront_visible = TRUE)",
+    [productId, req.admin.role === "admin"]
+  );
+  if (!product.rowCount) return res.status(404).json({ error: "المنتج غير موجود" });
+  const { rows } = await pool.query(
+    `SELECT id, path, zoom_percent, is_primary
+     FROM product_images WHERE product_id = $1
+     ORDER BY is_primary DESC, id`,
+    [productId]
+  );
+  const adminImageExpiry = product.rows[0].storefront_visible ? null : Date.now() + 60 * 60 * 1000;
+  res.json(rows.map(image => {
+    if (adminImageExpiry === null) return image;
+    const signature = crypto.createHmac("sha256", JWT_SECRET)
+      .update(`${image.id}:${adminImageExpiry}`)
+      .digest("hex");
+    return {
+      ...image,
+      path: `${image.path}?admin_exp=${adminImageExpiry}&admin_sig=${signature}`
+    };
+  }));
+});
 app.put("/api/products/order", auth, role("admin", "manager"), async (req, res) => {
   const ids = req.body.ids;
   if (!Array.isArray(ids) || ids.some(id => !Number.isInteger(id) || id < 1) ||

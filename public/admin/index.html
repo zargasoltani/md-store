@@ -341,6 +341,8 @@ const translations={
 Object.assign(translations.ar,{selectProductFiles:"اختيار صور",noProductFilesSelected:"لم يتم اختيار صور",productFilesSelected:"عدد الصور المختارة: {count}"});
 Object.assign(translations.ar,{selectedFilesHeading:"معاينة الصور الجديدة المختارة",savedProductImagesHeading:"الصور المحفوظة لهذا المنتج"});
 Object.assign(translations.fr,{selectedFilesHeading:"Aperçu des nouvelles images sélectionnées",savedProductImagesHeading:"Images déjà enregistrées pour ce produit"});
+Object.assign(translations.ar,{productImagesLoading:"جارٍ تحميل صور هذا المنتج...",productImagesLoadFailed:"تعذر تحميل صور هذا المنتج"});
+Object.assign(translations.fr,{productImagesLoading:"Chargement des images de ce produit…",productImagesLoadFailed:"Impossible de charger les images de ce produit"});
 Object.assign(translations.ar,{archiveOrders:"الطلبات المؤرشفة",restoreOrder:"استعادة الطلب",archiveOrder:"أرشفة الطلب",archiveOrderConfirm:"أرشفة الطلب رقم {id}؟ سيبقى محفوظًا ويمكن استعادته لاحقًا.",restoreOrderConfirm:"استعادة الطلب رقم {id} إلى القائمة؟",archiveOrderFailed:"تعذرت أرشفة الطلب",restoreOrderFailed:"تعذرت استعادة الطلب"});
 Object.assign(translations.fr,{archiveOrders:"Commandes archivées",restoreOrder:"Restaurer la commande",archiveOrder:"Archiver la commande",archiveOrderConfirm:"Archiver la commande n° {id} ? Elle restera enregistrée et pourra être restaurée.",restoreOrderConfirm:"Restaurer la commande n° {id} dans la liste ?",archiveOrderFailed:"Impossible d’archiver la commande",restoreOrderFailed:"Impossible de restaurer la commande"});
 Object.assign(translations.ar,{savingProduct:"جارٍ حفظ المنتج...",productNameRequired:"أدخل اسم المنتج.",productPriceRequired:"أدخل سعرًا صالحًا.",productSaveFailed:"تعذر حفظ المنتج. تحقق من الاتصال ثم أعد المحاولة.",productSavedRefreshFailed:"تم حفظ المنتج، لكن تعذر تحديث لوحة الإدارة. أعد تحميل الصفحة."});
@@ -1671,6 +1673,32 @@ addProductColorBtn.addEventListener("click",addProductColor);
 productColorHex.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();addProductColor()}});
 productColorSwatches.addEventListener("click",event=>{const button=event.target.closest("[data-color-index]");if(button)removeProductColor(Number(button.dataset.colorIndex))});
 pi.addEventListener("change",renderProductFilePicker);
+function renderProductImageSettings(p){
+  currentImages.setAttribute("aria-label",t("savedProductImagesHeading"));
+  currentImages.innerHTML=p.images.map((im,index)=>{
+    const zoom=[70,80,90,100].includes(Number(im.zoom_percent))?Number(im.zoom_percent):100;
+    const isPrimary=Boolean(im.is_primary)||(!p.images.some(image=>image.is_primary)&&index===0);
+    return `${index===0?`<strong class="product-selected-images-heading">${t("savedProductImagesHeading")}</strong>`:""}<span class="product-image-setting" style="display:flex;flex-direction:column;align-items:center;gap:5px"><img class="thumb" src="${esc(im.path)}" alt="${esc(p.name)}" onclick="previewImage('${esc(im.path)}','${esc(p.name)}')"><span data-primary-image-badge style="${isPrimary?"":"display:none;"}padding:3px 6px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;white-space:nowrap">${t("primaryImageBadge")}</span><button type="button" data-set-primary-image="${im.id}" data-product-id="${p.id}" aria-pressed="${isPrimary}" style="padding:6px 8px;font-size:11px;white-space:nowrap">${t("setPrimaryImage")}</button><label class="image-zoom-control" style="display:flex;flex-direction:column;align-items:center;font-size:11px"><span data-image-zoom-label>${t("imageZoom")}</span><select style="width:auto;margin:0;padding:4px 6px;font-size:12px" data-image-zoom data-product-id="${p.id}" data-image-id="${im.id}" data-image-index="${index+1}" data-previous-zoom="${zoom}" aria-label="${t("imageZoom")} ${index+1}"><option data-zoom-label="imageZoom100" value="100" ${zoom===100?"selected":""}>${t("imageZoom100")}</option><option data-zoom-label="imageZoom90" value="90" ${zoom===90?"selected":""}>${t("imageZoom90")}</option><option data-zoom-label="imageZoom80" value="80" ${zoom===80?"selected":""}>${t("imageZoom80")}</option><option data-zoom-label="imageZoom70" value="70" ${zoom===70?"selected":""}>${t("imageZoom70")}</option></select></label><button class="danger" type="button" onclick="delImage(${p.id},${im.id})">×</button></span>`;
+  }).join("");
+}
+async function loadProductImageSettings(product){
+  if(currentImages.dataset.productId!==String(product.id))return;
+  currentImages.innerHTML=`<span class="muted">${t("productImagesLoading")}</span>`;
+  try{
+    const response=await api(`/api/admin/products/${Number(product.id)}/images`);
+    const images=await response.json();
+    if(!response.ok||!Array.isArray(images))throw new Error(images.error||t("productImagesLoadFailed"));
+    if(currentImages.dataset.productId!==String(product.id))return;
+    product.images=images;
+    renderProductImageSettings(product);
+  }catch(error){
+    console.error("Could not load images for the edited product:",error);
+    if(currentImages.dataset.productId===String(product.id)){
+      currentImages.replaceChildren();
+      alert(error.message||t("productImagesLoadFailed"));
+    }
+  }
+}
 function edit(id){
   const p=allProducts.find(x=>x.id==id);
   if(!p)return;
@@ -1680,12 +1708,9 @@ function edit(id){
   pid.value=p.id;pn.value=p.name;psd.value=p.short_description||"";pd.value=p.description;pc.value=p.category_id||"";pp.value=p.price;pCost.value=p.cost_price??"";pDelivery.value=p.delivery_price??0;po.value=p.old_price??"";ps.value=p.stock;pColors.value=Array.isArray(p.colors)?p.colors.join(", "):"";renderProductColors();pAdvertised.checked=Boolean(p.advertised);pNewProducts.checked=Boolean(p.show_new_products);pBestSellers.checked=Boolean(p.show_best_sellers);hideFromStoreCheckbox.checked=p.storefront_visible===false;
   const productZoom=[70,80,90,100].includes(Number(p.zoom_percent))?Number(p.zoom_percent):100;
   productZoomSelect.value=String(productZoom);productZoomSelect.dataset.previousZoom=String(productZoom);formTitle.textContent=t("editProduct");
-  currentImages.innerHTML=p.images.map((im,index)=>{
-    const zoom=[70,80,90,100].includes(Number(im.zoom_percent))?Number(im.zoom_percent):100;
-    const isPrimary=Boolean(im.is_primary)||(!p.images.some(image=>image.is_primary)&&index===0);
-    return `${index===0?`<strong class="product-selected-images-heading">${t("savedProductImagesHeading")}</strong>`:""}<span class="product-image-setting" style="display:flex;flex-direction:column;align-items:center;gap:5px"><img class="thumb" src="${esc(im.path)}" alt="${esc(p.name)}" onclick="previewImage('${esc(im.path)}','${esc(p.name)}')"><span data-primary-image-badge style="${isPrimary?"":"display:none;"}padding:3px 6px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;white-space:nowrap">${t("primaryImageBadge")}</span><button type="button" data-set-primary-image="${im.id}" data-product-id="${p.id}" aria-pressed="${isPrimary}" style="padding:6px 8px;font-size:11px;white-space:nowrap">${t("setPrimaryImage")}</button><label class="image-zoom-control" style="display:flex;flex-direction:column;align-items:center;font-size:11px"><span data-image-zoom-label>${t("imageZoom")}</span><select style="width:auto;margin:0;padding:4px 6px;font-size:12px" data-image-zoom data-product-id="${p.id}" data-image-id="${im.id}" data-image-index="${index+1}" data-previous-zoom="${zoom}" aria-label="${t("imageZoom")} ${index+1}"><option data-zoom-label="imageZoom100" value="100" ${zoom===100?"selected":""}>${t("imageZoom100")}</option><option data-zoom-label="imageZoom90" value="90" ${zoom===90?"selected":""}>${t("imageZoom90")}</option><option data-zoom-label="imageZoom80" value="80" ${zoom===80?"selected":""}>${t("imageZoom80")}</option><option data-zoom-label="imageZoom70" value="70" ${zoom===70?"selected":""}>${t("imageZoom70")}</option></select></label><button class="danger" type="button" onclick="delImage(${p.id},${im.id})">×</button></span>`;
-  }).join("");
+  currentImages.innerHTML=`<span class="muted">${t("productImagesLoading")}</span>`;
   openProductForm();
+  loadProductImageSettings(p);
 }
 function resetForm(){pid.value="";currentImages.dataset.productId="";pn.value="";psd.value="";pd.value="";pc.value="";pp.value="";pCost.value="";pDelivery.value="0";po.value="";ps.value="";pColors.value="";productColorPicker.value="#C99A3B";productColorHex.value="#C99A3B";renderProductColors();pAdvertised.checked=false;pNewProducts.checked=false;pBestSellers.checked=false;hideFromStoreCheckbox.checked=false;productZoomSelect.value="100";productZoomSelect.dataset.previousZoom="100";pi.value="";renderProductFilePicker();formTitle.textContent=t("createProduct");currentImages.innerHTML=""}
 async function saveProduct(){
