@@ -289,6 +289,12 @@ body.dark .chart-controls button[aria-pressed="true"]{box-shadow:0 2px 7px #0004
 <div class="homepage-sections-list" id="manualHomepageSectionsList"></div>
 <div class="manual-homepage-section-actions"><button class="toggle-btn" id="addManualHomepageSectionBtn" type="button" onclick="addManualHomepageSection()">إضافة قسم</button><button class="gold" id="saveManualHomepageSectionsBtn" type="button" onclick="saveManualHomepageSections()">حفظ الأقسام اليدوية</button></div>
 </section>
+<section class="manual-homepage-sections" aria-labelledby="homepageSectionOrderTitle">
+<h3 id="homepageSectionOrderTitle">ترتيب عرض أقسام الصفحة الرئيسية</h3>
+<p class="settings-hint" id="homepageSectionOrderHint">رتب الأقسام الأساسية والمنتج المميز والأقسام اليدوية معًا بالسحب أو أزرار التحريك.</p>
+<div class="homepage-sections-list" id="homepageSectionOrderList"></div>
+<div class="hero-background-actions"><button class="gold" id="saveHomepageSectionOrderBtn" type="button" onclick="saveHomepageSectionOrder()">حفظ ترتيب الأقسام</button></div>
+</section>
 <section class="navigation-manager" aria-labelledby="navigationTitle">
 <h3 id="navigationTitle">إدارة روابط شريط التنقل</h3>
 <p class="settings-hint" id="navigationHint">أضف الروابط أو عدّلها أو احذفها، وحدّد اسمًا بالعربية والفرنسية.</p>
@@ -398,6 +404,12 @@ Object.assign(translations.ar,{featuredImageSliderTitle:"إعدادات سلاي
 Object.assign(translations.fr,{featuredImageSliderTitle:"Réglages du carrousel d’images du produit vedette",featuredImageSliderHint:"Réglez la lecture automatique, la durée de chaque image et l’affichage des flèches.",featuredImageSliderAutoplay:"Lecture automatique",featuredImageSliderInterval:"Durée d’affichage de chaque image",featuredImageSliderArrows:"Afficher les flèches de navigation",saveFeaturedImageSlider:"Enregistrer les réglages du carrousel",featuredImageSliderSaved:"Réglages du carrousel enregistrés",featuredImageSliderFailed:"Impossible d’enregistrer les réglages du carrousel",sliderSeconds3:"3 secondes",sliderSeconds5:"5 secondes",sliderSeconds7:"7 secondes",sliderSeconds10:"10 secondes"});
 Object.assign(translations.ar,{homepageSectionsTitle:"إدارة أقسام الصفحة الرئيسية",homepageSectionsHint:"أخفِ الأقسام أو أظهرها، واسحبها لتغيير ترتيبها. أضف أقسامًا جديدة من النماذج الجاهزة دون تعديل الصفحة الرئيسية.",categoryShowcaseSection:"اكتشفوا عوالمنا",newProductsSection:"المنتجات الجديدة",bestSellersSection:"الأكثر مبيعاً",sectionTitle:"العنوان",sectionSubtitle:"العنوان الفرعي",sectionOrder:"الترتيب",sectionProductCount:"عدد المنتجات المعروضة",sectionEnabled:"إظهار القسم",saveHomepageSections:"حفظ أقسام الصفحة الرئيسية",addHomepageSection:"إضافة قسم جديد",dragHomepageSection:"اسحب لإعادة ترتيب القسم",moveSectionUp:"تحريك القسم إلى الأعلى",moveSectionDown:"تحريك القسم إلى الأسفل",homepageSectionsSaved:"تم حفظ إعدادات أقسام الصفحة الرئيسية",homepageSectionsFailed:"تعذر حفظ إعدادات أقسام الصفحة الرئيسية",homepageSectionsOrderInvalid:"يجب إدخال ترتيب مختلف لكل قسم من 1 إلى {count}"});
 Object.assign(translations.fr,{homepageSectionsTitle:"Gérer les sections de la page d’accueil",homepageSectionsHint:"Masquez ou affichez les sections et faites-les glisser pour les réordonner. Ajoutez de nouvelles sections à partir des modèles sans modifier la page d’accueil.",categoryShowcaseSection:"Explorez nos univers",newProductsSection:"Nouveautés",bestSellersSection:"Meilleures ventes",sectionTitle:"Titre",sectionSubtitle:"Sous-titre",sectionOrder:"Ordre",sectionProductCount:"Nombre de produits affichés",sectionEnabled:"Afficher la section",saveHomepageSections:"Enregistrer les sections",addHomepageSection:"Ajouter une section",dragHomepageSection:"Faire glisser pour réordonner",moveSectionUp:"Déplacer la section vers le haut",moveSectionDown:"Déplacer la section vers le bas",homepageSectionsSaved:"Paramètres des sections enregistrés",homepageSectionsFailed:"Impossible d’enregistrer les paramètres des sections",homepageSectionsOrderInvalid:"Attribuez un ordre différent à chaque section, de 1 à {count}"});
+Object.assign(translations.ar,{homepageSectionOrderTitle:"ترتيب عرض أقسام الصفحة الرئيسية",homepageSectionOrderHint:"رتب الأقسام الأساسية وسلايدر المنتج المميز والأقسام اليدوية معًا بالسحب أو أزرار التحريك.",homepageSectionOrderSave:"حفظ ترتيب الأقسام",homepageSectionOrderSaved:"تم حفظ ترتيب أقسام الصفحة الرئيسية",homepageSectionOrderFailed:"تعذر حفظ ترتيب أقسام الصفحة الرئيسية",featuredProductOrderLabel:"سلايدر المنتج المميز"});
+Object.assign(translations.fr,{homepageSectionOrderTitle:"Ordre d’affichage des sections",homepageSectionOrderHint:"Réorganisez ensemble les sections principales, le carrousel du produit vedette et les sections manuelles par glisser-déposer ou avec les flèches.",homepageSectionOrderSave:"Enregistrer l’ordre des sections",homepageSectionOrderSaved:"Ordre des sections enregistré",homepageSectionOrderFailed:"Impossible d’enregistrer l’ordre des sections",featuredProductOrderLabel:"Carrousel du produit vedette"});
+Object.assign(translations.ar,{homepageSectionsHint:"أخفِ الأقسام أو أظهرها، وعدّل عناوينها. استخدم قائمة الترتيب الموحدة أدناه لترتيب الأقسام الأساسية وسلايدر المنتج المميز والأقسام اليدوية."});
+Object.assign(translations.fr,{homepageSectionsHint:"Masquez ou affichez les sections et modifiez leurs titres. Utilisez la liste d’ordre ci-dessous pour réorganiser les sections principales, le carrousel du produit vedette et les sections manuelles."});
+Object.assign(translations.ar,{homepageSectionOrderRequiresSave:"احفظ الأقسام اليدوية أولًا قبل حفظ ترتيبها."});
+Object.assign(translations.fr,{homepageSectionOrderRequiresSave:"Enregistrez d’abord les sections manuelles avant leur ordre."});
 Object.assign(translations.ar,{manualHomepageSectionsTitle:"الأقسام اليدوية",manualHomepageSectionsHint:"أنشئ أقسامًا مستقلة بمحتوى وصورة ورابط من اختيارك.",manualHomepageSectionAdd:"إضافة قسم",manualHomepageSectionsSave:"حفظ الأقسام اليدوية",manualHomepageSectionsSaved:"تم حفظ الأقسام اليدوية",manualHomepageSectionsFailed:"تعذر حفظ الأقسام اليدوية",manualHomepageSectionsLimit:"الحد الأقصى 30 قسمًا يدويًا",manualSectionRemove:"حذف القسم",manualSectionType:"نوع القسم",manualSectionTypeHero:"بانر رئيسي",manualSectionTypeNew:"المنتجات الجديدة",manualSectionTypeBest:"الأكثر مبيعًا",manualSectionTypeCategories:"اكتشفوا عوالمنا",manualSectionTypeFeatured:"منتجات مميزة",manualSectionTypePromotions:"العروض",manualSectionTypeManual:"يدوي مخصص",manualSectionImage:"اختر صورة",manualSectionImagePosition:"موضع الصورة",manualSectionImageCenter:"وسط",manualSectionImageLeft:"يسار",manualSectionImageRight:"يمين",manualSectionVerticalPosition:"الارتفاع",manualSectionVerticalTop:"أعلى",manualSectionVerticalCenter:"وسط",manualSectionVerticalBottom:"أسفل",manualSectionImageRequired:"اختر صورة للقسم اليدوي أو البانر.",manualSectionButtonText:"نص الزر",manualSectionButtonLink:"رابط الزر",manualSectionProductCount:"عدد المنتجات",manualSectionInvalidOrder:"يجب أن يكون ترتيب الأقسام اليدوية متتابعًا وفريدًا"});
 Object.assign(translations.fr,{manualHomepageSectionsTitle:"Sections manuelles",manualHomepageSectionsHint:"Créez des sections indépendantes avec votre propre contenu, image et lien.",manualHomepageSectionAdd:"Ajouter une section",manualHomepageSectionsSave:"Enregistrer les sections manuelles",manualHomepageSectionsSaved:"Sections manuelles enregistrées",manualHomepageSectionsFailed:"Impossible d’enregistrer les sections manuelles",manualHomepageSectionsLimit:"La limite est de 30 sections manuelles.",manualSectionRemove:"Supprimer",manualSectionType:"Type de section",manualSectionTypeHero:"Bannière Hero",manualSectionTypeNew:"Nouveautés",manualSectionTypeBest:"Meilleures ventes",manualSectionTypeCategories:"Explorez nos univers",manualSectionTypeFeatured:"Produits vedettes",manualSectionTypePromotions:"Promotions",manualSectionTypeManual:"Manuel (personnalisé)",manualSectionImage:"Choisir une image",manualSectionImagePosition:"Position de l'image",manualSectionImageCenter:"Center",manualSectionImageLeft:"Left",manualSectionImageRight:"Right",manualSectionVerticalPosition:"Position verticale",manualSectionVerticalTop:"Haut",manualSectionVerticalCenter:"Center",manualSectionVerticalBottom:"Bas",manualSectionImageRequired:"Choisissez une image pour la section ou la bannière.",manualSectionButtonText:"Texte du bouton",manualSectionButtonLink:"Lien du bouton",manualSectionProductCount:"Nombre de produits",manualSectionInvalidOrder:"L’ordre des sections manuelles doit être unique et continu."});
 Object.assign(translations.ar,{navigationTitle:"إدارة روابط شريط التنقل",navigationHint:"أضف الروابط أو عدّلها أو احذفها، وحدّد اسمًا بالعربية والفرنسية. يقبل الرابط #products أو /page أو https://...",navigationArabicLabel:"الاسم بالعربية",navigationFrenchLabel:"الاسم بالفرنسية",navigationHrefLabel:"الرابط",navigationAdd:"إضافة رابط",navigationSave:"حفظ",navigationDelete:"حذف",navigationMoveUp:"تحريك لأعلى",navigationMoveDown:"تحريك لأسفل",navigationSaved:"تم حفظ روابط التنقل",navigationSaveFailed:"تعذر حفظ روابط التنقل",navigationDeleteConfirm:"هل تريد حذف هذا الرابط من شريط التنقل؟",navigationEmpty:"لا توجد روابط في شريط التنقل",navigationMaxLinks:"يمكن إضافة 12 رابطاً كحد أقصى"});
@@ -610,6 +622,8 @@ async function storeSettingsLoad(){
   document.getElementById("featuredImageSliderArrows").checked=settings.featured_image_slider.showArrows;
   renderHomepageSectionSettings(settings.homepage_sections);
   renderManualHomepageSections(settings.manual_homepage_sections);
+  savedManualHomepageSectionIds=settings.manual_homepage_sections.map(section=>section.id);
+  renderHomepageSectionOrder(settings.homepage_section_order,settings.manual_homepage_sections);
   heroBackgroundUrl.value=settings.hero_background_url;heroCardX.value=settings.hero_card_x;heroCardY.value=settings.hero_card_y;heroOverlay.value=settings.hero_overlay;heroPriceSize.value=settings.hero_price_size;updateHeroSettingValues();updateHeroBackgroundPreview();
   heroLogoUrl.value=settings.hero_logo_url;updateHeroLogoPreview();
   mobileLogoUrl.value=settings.mobile_logo_url;mobileLogoFile.value="";updateMobileLogoPreview();
@@ -652,19 +666,12 @@ function renderHomepageSectionSettings(sections){
     const heading=document.createElement("h4");
     heading.dataset.sectionHeading=section.id;
     row.append(heading);
-    const reorder=document.createElement("div");
-    reorder.className="section-reorder-controls";
-    const drag=document.createElement("button");
-    drag.type="button";drag.className="toggle-btn section-drag-handle";drag.draggable=true;drag.dataset.sectionDrag="true";drag.textContent="⠿";drag.title=t("dragHomepageSection");drag.setAttribute("aria-label",t("dragHomepageSection"));
-    reorder.append(drag);
-    for(const [delta,key,label] of [[-1,"up","moveSectionUp"],[1,"down","moveSectionDown"]]){
-      const move=document.createElement("button");move.type="button";move.className="toggle-btn";move.dataset.sectionMove=String(delta);move.textContent=delta<0?"↑":"↓";move.title=t(label);move.setAttribute("aria-label",t(label));reorder.append(move);
-    }
-    row.append(reorder);
+    const orderField=makeField("order","sectionOrder","number",section.order,{min:1,max:sections.length,step:1});
+    orderField.hidden=true;
     row.append(
       makeField("title","sectionTitle","text",section.title,{maxlength:80}),
       makeField("subtitle","sectionSubtitle","text",section.subtitle,{maxlength:120}),
-      makeField("order","sectionOrder","number",section.order,{min:1,max:sections.length,step:1})
+      orderField
     );
     if(Number.isInteger(section.productCount)){
       row.append(makeField("productCount","sectionProductCount","number",section.productCount,{min:1,max:48,step:1}));
@@ -674,7 +681,6 @@ function renderHomepageSectionSettings(sections){
     row.append(enabled);
     return row;
   }));
-  bindSectionReordering(sectionList,".homepage-section-row",'[data-field="order"]');
   updateHomepageSectionLabels();
 }
 function updateSectionOrderValues(list,rowSelector,orderSelector){
@@ -726,22 +732,98 @@ function bindSectionReordering(list,rowSelector,orderSelector){
     updateSectionOrderValues(list,rowSelector,orderSelector);
   });
 }
+let homepageSectionOrder=[];
+let savedManualHomepageSectionIds=[];
+function homepageSectionOrderLabel(id,manualSections){
+  const labels={category_showcase:"categoryShowcaseSection",new_products:"newProductsSection",best_sellers:"bestSellersSection",featured_product:"featuredProductOrderLabel"};
+  if(labels[id])return t(labels[id]);
+  const manual=manualSections.find(section=>id===`manual:${section.id}`);
+  const typeKeys={hero_banner:"manualSectionTypeHero",new_products:"manualSectionTypeNew",best_sellers:"manualSectionTypeBest",category_showcase:"manualSectionTypeCategories",featured_products:"manualSectionTypeFeatured",promotions:"manualSectionTypePromotions",manual:"manualSectionTypeManual"};
+  return manual?.title?.trim()||t(typeKeys[manual?.type]||"manualSectionTypeManual");
+}
+function renderHomepageSectionOrder(order,manualSections){
+  const list=document.getElementById("homepageSectionOrderList");
+  if(!list)return;
+  const manuals=Array.isArray(manualSections)?manualSections:[];
+  const defaults=["category_showcase","featured_product","new_products","best_sellers",...manuals.map(section=>`manual:${section.id}`)];
+  const valid=new Set(defaults);
+  const preferred=Array.isArray(order)?order:homepageSectionOrder;
+  const retained=[...new Set(preferred.filter(id=>valid.has(id)))];
+  homepageSectionOrder=[...retained,...defaults.filter(id=>!retained.includes(id))];
+  list.replaceChildren(...homepageSectionOrder.map(id=>{
+    const row=document.createElement("div");
+    row.className="homepage-section-row";
+    row.style.gridTemplateColumns="minmax(0,1fr) auto";
+    row.dataset.homepageOrderId=id;
+    const heading=document.createElement("h4");
+    heading.style.gridColumn="1";
+    heading.textContent=homepageSectionOrderLabel(id,manuals);
+    row.append(heading);
+    const controls=document.createElement("div");
+    controls.className="section-reorder-controls";
+    controls.style.gridColumn="2";
+    const drag=document.createElement("button");
+    drag.type="button";drag.className="toggle-btn section-drag-handle";drag.draggable=true;drag.dataset.sectionDrag="true";drag.textContent="⠿";drag.title=t("dragHomepageSection");drag.setAttribute("aria-label",t("dragHomepageSection"));
+    controls.append(drag);
+    for(const [delta,key] of [[-1,"moveSectionUp"],[1,"moveSectionDown"]]){
+      const button=document.createElement("button");button.type="button";button.className="toggle-btn";button.dataset.sectionMove=String(delta);button.textContent=delta<0?"↑":"↓";button.title=t(key);button.setAttribute("aria-label",t(key));controls.append(button);
+    }
+    row.append(controls);
+    const orderValue=document.createElement("input");
+    orderValue.type="hidden";orderValue.dataset.homepageOrderValue="true";
+    row.append(orderValue);
+    return row;
+  }));
+  bindSectionReordering(list,".homepage-section-row",'[data-homepage-order-value]');
+  updateSectionOrderValues(list,".homepage-section-row",'[data-homepage-order-value]');
+}
+function syncHomepageSectionOrderWithManualRows(){
+  const list=document.getElementById("homepageSectionOrderList");
+  const currentOrder=[...list.querySelectorAll("[data-homepage-order-id]")].map(row=>row.dataset.homepageOrderId);
+  const manualRows=[...manualHomepageSectionsList.querySelectorAll(".manual-homepage-section-row")].map(row=>({
+    id:row.dataset.manualHomepageSection,
+    title:row.querySelector('[data-manual-field="title"]').value,
+    type:row.querySelector('[data-manual-field="type"]').value
+  }));
+  renderHomepageSectionOrder(currentOrder,manualRows);
+}
+async function saveHomepageSectionOrder(){
+  const list=document.getElementById("homepageSectionOrderList");
+  const order=[...list.querySelectorAll("[data-homepage-order-id]")].map(row=>row.dataset.homepageOrderId);
+  const manualIds=[...manualHomepageSectionsList.querySelectorAll(".manual-homepage-section-row")].map(row=>row.dataset.manualHomepageSection);
+  if(manualIds.length!==savedManualHomepageSectionIds.length||manualIds.some(id=>!savedManualHomepageSectionIds.includes(id))){
+    showToast(t("homepageSectionOrderRequiresSave"));return;
+  }
+  const button=document.getElementById("saveHomepageSectionOrderBtn");
+  button.disabled=true;
+  try{
+    const response=await api("/api/admin/homepage-section-order",{method:"PUT",body:{order}});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||t("homepageSectionOrderFailed"));
+    homepageSectionOrder=result.order;
+    showToast(t("homepageSectionOrderSaved"));
+  }catch(error){showToast(error.message||t("homepageSectionOrderFailed"))}
+  finally{button.disabled=false}
+}
 function addHomepageSection(){
   addManualHomepageSection();
   document.getElementById("manualHomepageSectionsTitle").scrollIntoView({behavior:"smooth",block:"center"});
 }
 function updateHomepageSectionLabels(){
   const sectionNameKeys={category_showcase:"categoryShowcaseSection",new_products:"newProductsSection",best_sellers:"bestSellersSection"};
-  document.querySelectorAll(".homepage-section-row").forEach(row=>{
+  document.querySelectorAll(".homepage-section-row[data-homepage-section]").forEach(row=>{
     const sectionTitle=row.querySelector('[data-field="title"]').value;
     const headingKey=sectionNameKeys[row.dataset.homepageSection];
     const headingText=headingKey&&translations[currentLang][headingKey];
     row.querySelector("h4").textContent=headingText||sectionTitle;
     row.querySelectorAll("[data-label-key]").forEach(label=>{label.textContent=t(label.dataset.labelKey)});
   });
+  document.getElementById("homepageSectionOrderTitle").textContent=t("homepageSectionOrderTitle");
+  document.getElementById("homepageSectionOrderHint").textContent=t("homepageSectionOrderHint");
+  document.getElementById("saveHomepageSectionOrderBtn").textContent=t("homepageSectionOrderSave");
 }
 for(const languageButton of [langToggle,loginLangToggle]){
-  languageButton.addEventListener("click",()=>setTimeout(updateHomepageSectionLabels,0));
+  languageButton.addEventListener("click",()=>setTimeout(()=>{updateHomepageSectionLabels();updateHomepageSectionOrderLabels()},0));
 }
 async function saveHomepageSections(){
   const rows=[...document.querySelectorAll("[data-homepage-section]")];
@@ -808,11 +890,6 @@ function renderManualHomepageSections(sections){
  list.innerHTML=sortByOrder(sections).map(section=>`
    <div class="manual-homepage-section-row" data-manual-homepage-section="${esc(section.id)}" data-manual-image="${esc(section.image||"")}">
      <h4>${esc(section.title||t("manualSectionTypeManual"))}</h4>
-     <div class="section-reorder-controls">
-       <button type="button" class="toggle-btn section-drag-handle" draggable="true" data-section-drag="true" title="${esc(t("dragHomepageSection"))}" aria-label="${esc(t("dragHomepageSection"))}">⠿</button>
-       <button type="button" class="toggle-btn" data-section-move="-1" title="${esc(t("moveSectionUp"))}" aria-label="${esc(t("moveSectionUp"))}">↑</button>
-       <button type="button" class="toggle-btn" data-section-move="1" title="${esc(t("moveSectionDown"))}" aria-label="${esc(t("moveSectionDown"))}">↓</button>
-     </div>
      <label><span data-manual-label="manualSectionType"></span><select data-manual-field="type">${manualSectionTypeOptions(section.type)}</select></label>
      <label><span data-manual-label="sectionTitle"></span><input data-manual-field="title" maxlength="80" value="${esc(section.title)}" required></label>
      <label><span data-manual-label="sectionSubtitle"></span><input data-manual-field="subtitle" maxlength="160" value="${esc(section.subtitle||"")}"></label>
@@ -823,11 +900,10 @@ function renderManualHomepageSections(sections){
      <label data-manual-button-field><span data-manual-label="manualSectionButtonLink"></span><input data-manual-field="buttonLink" type="text" maxlength="1000" value="${esc(section.buttonLink||"")}" placeholder="/favorites"></label>
      <label data-manual-count-field><span data-manual-label="manualSectionProductCount"></span><input data-manual-field="productCount" type="number" min="1" max="48" step="1" value="${Number(section.productCount)||12}"></label>
      <label class="manual-homepage-section-enabled"><input data-manual-field="enabled" type="checkbox" ${section.enabled?"checked":""}><span data-manual-label="sectionEnabled"></span></label>
-     <label><span data-manual-label="sectionOrder"></span><input data-manual-field="order" type="number" min="1" max="${sections.length}" step="1" value="${section.order}" required></label>
+     <input data-manual-field="order" type="number" min="1" max="${sections.length}" step="1" value="${section.order}" required hidden>
      <button class="danger" type="button" data-manual-action="remove"></button>
    </div>`).join("");
  [...list.children].forEach(updateManualHomepageSectionRow);
- bindSectionReordering(list,".manual-homepage-section-row",'[data-manual-field="order"]');
  updateSectionOrderValues(list,".manual-homepage-section-row",'[data-manual-field="order"]');
  updateManualHomepageSectionLabels();
 }
@@ -856,15 +932,28 @@ function updateManualHomepageSectionLabels(){
    const type=row.querySelector('[data-manual-field="type"]').value;
    row.querySelector("h4").textContent=translations[currentLang][typeKeys[type]]||row.querySelector('[data-manual-field="title"]').value||t("manualSectionTypeManual");
    row.querySelectorAll("[data-manual-label]").forEach(label=>{label.textContent=t(label.dataset.manualLabel)});
-   const drag=row.querySelector("[data-section-drag]");
-   drag.title=t("dragHomepageSection");drag.setAttribute("aria-label",t("dragHomepageSection"));
+   const remove=row.querySelector('[data-manual-action="remove"]');
+   remove.textContent=t("manualSectionRemove");remove.setAttribute("aria-label",t("manualSectionRemove"));
+   row.querySelectorAll('[data-manual-field="type"] option').forEach(option=>{option.textContent=t(typeKeys[option.value])});
+ });
+ updateHomepageSectionOrderLabels();
+}
+function updateHomepageSectionOrderLabels(){
+ const list=document.getElementById("homepageSectionOrderList");
+ if(!list)return;
+ const manuals=[...manualHomepageSectionsList.querySelectorAll(".manual-homepage-section-row")].map(row=>({
+   id:row.dataset.manualHomepageSection,
+   title:row.querySelector('[data-manual-field="title"]').value,
+   type:row.querySelector('[data-manual-field="type"]').value
+ }));
+ list.querySelectorAll("[data-homepage-order-id]").forEach(row=>{
+   row.querySelector("h4").textContent=homepageSectionOrderLabel(row.dataset.homepageOrderId,manuals);
    row.querySelectorAll("[data-section-move]").forEach(button=>{
      const key=Number(button.dataset.sectionMove)<0?"moveSectionUp":"moveSectionDown";
      button.title=t(key);button.setAttribute("aria-label",t(key));
    });
-   const remove=row.querySelector('[data-manual-action="remove"]');
-   remove.textContent=t("manualSectionRemove");remove.setAttribute("aria-label",t("manualSectionRemove"));
-   row.querySelectorAll('[data-manual-field="type"] option').forEach(option=>{option.textContent=t(typeKeys[option.value])});
+   const drag=row.querySelector("[data-section-drag]");
+   drag.title=t("dragHomepageSection");drag.setAttribute("aria-label",t("dragHomepageSection"));
  });
 }
 const manualHomepageSectionsList=document.getElementById("manualHomepageSectionsList");
@@ -884,6 +973,7 @@ manualHomepageSectionsList.addEventListener("click",event=>{
  if(!event.target.matches('[data-manual-action="remove"]'))return;
  event.target.closest(".manual-homepage-section-row").remove();
  updateSectionOrderValues(manualHomepageSectionsList,".manual-homepage-section-row",'[data-manual-field="order"]');
+ syncHomepageSectionOrderWithManualRows();
 });
 function addManualHomepageSection(){
  const rows=[...manualHomepageSectionsList.querySelectorAll(".manual-homepage-section-row")];
@@ -904,6 +994,7 @@ function addManualHomepageSection(){
    order:Number(row.querySelector('[data-manual-field="order"]').value)
  }));
  renderManualHomepageSections([...existing,{id,type:"manual",title:"",subtitle:"",image:"",imagePosition:"center",imageVerticalPosition:"center",buttonText:"",buttonLink:"",enabled:true,order:rows.length+1}]);
+ syncHomepageSectionOrderWithManualRows();
 }
 async function saveManualHomepageSections(){
  const rows=[...manualHomepageSectionsList.querySelectorAll(".manual-homepage-section-row")];
@@ -945,6 +1036,8 @@ async function saveManualHomepageSections(){
    const result=await response.json();
    if(!response.ok)throw new Error(result.error||t("manualHomepageSectionsFailed"));
    renderManualHomepageSections(result.sections);
+   savedManualHomepageSectionIds=result.sections.map(section=>section.id);
+   syncHomepageSectionOrderWithManualRows();
    showToast(t("manualHomepageSectionsSaved"));
  }catch(error){
    console.error("Could not save manual homepage sections:",error);

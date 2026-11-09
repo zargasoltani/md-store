@@ -583,6 +583,7 @@ const DEFAULT_HOMEPAGE_SECTIONS = [
   { id: "new_products", title: "Nouveautés", subtitle: "Fraîchement arrivés", enabled: true, order: 2, productCount: 12 },
   { id: "best_sellers", title: "Meilleures ventes", subtitle: "Sélection M&D", enabled: true, order: 3, productCount: 12 }
 ];
+const DEFAULT_HOMEPAGE_SECTION_ORDER = ["category_showcase", "featured_product", "new_products", "best_sellers"];
 const DEFAULT_FEATURED_IMAGE_SLIDER_SETTINGS = {
   autoplay: true,
   intervalSeconds: 7,
@@ -662,6 +663,21 @@ function parseManualHomepageSections(value) {
       ...(section.type !== "manual" && section.type !== "hero_banner" ? { productCount: section.productCount } : {})
     };
   });
+}
+
+function parseHomepageSectionOrder(value, manualSections) {
+  const manualOrder = manualSections.slice().sort((left, right) => left.order - right.order)
+    .map(section => `manual:${section.id}`);
+  const defaults = [...DEFAULT_HOMEPAGE_SECTION_ORDER, ...manualOrder];
+  if (value === undefined) return defaults;
+  const savedOrder = JSON.parse(value);
+  if (!Array.isArray(savedOrder) || savedOrder.length > DEFAULT_HOMEPAGE_SECTION_ORDER.length + 30 ||
+    savedOrder.some(id => typeof id !== "string") || new Set(savedOrder).size !== savedOrder.length) {
+    throw new Error("Saved homepage section order is invalid");
+  }
+  const available = new Set(defaults);
+  const retained = savedOrder.filter(id => available.has(id));
+  return [...retained, ...defaults.filter(id => !retained.includes(id))];
 }
 
 function parseHomepageSections(value) {
@@ -786,6 +802,7 @@ app.get("/api/config", async (req, res) => {
       productColumns: Number.isInteger(productColumns) && productColumns >= 2 && productColumns <= 6 ? productColumns : 4,
       categoryColumns: Number.isInteger(categoryColumns) && categoryColumns >= 2 && categoryColumns <= 6 ? categoryColumns : 4,
       homepageSections: parseHomepageSections(settings.homepage_sections),
+      homepageSectionOrder: parseHomepageSectionOrder(settings.homepage_section_order, parseManualHomepageSections(settings.manual_homepage_sections)),
       featuredImageSlider: parseFeaturedImageSliderSettings(settings.featured_image_slider),
       manualHomepageSections: parseManualHomepageSections(settings.manual_homepage_sections),
       store: STORE,
@@ -1054,6 +1071,7 @@ app.get("/api/admin/settings", auth, role("admin"), async (req, res) => {
       product_columns: settings.draft_product_columns ?? settings.product_columns ?? "4",
       category_columns: settings.draft_category_columns ?? settings.category_columns ?? "4",
       homepage_sections: parseHomepageSections(settings.homepage_sections),
+      homepage_section_order: parseHomepageSectionOrder(settings.homepage_section_order, parseManualHomepageSections(settings.manual_homepage_sections)),
       featured_image_slider: parseFeaturedImageSliderSettings(settings.featured_image_slider),
       manual_homepage_sections: parseManualHomepageSections(settings.manual_homepage_sections),
       hero_settings_has_draft: HERO_DRAFT_SETTINGS.some(key => settings[`draft_${key}`] !== undefined) ||
@@ -1212,6 +1230,38 @@ app.put("/api/admin/manual-homepage-sections", auth, role("admin"), manualSectio
     res.status(500).json({ error: "Could not save manual homepage sections" });
   } finally {
     client.release();
+  }
+});
+
+app.put("/api/admin/homepage-section-order", auth, role("admin"), async (req, res) => {
+  const order = req.body?.order;
+  const settings = await readStoreSettings();
+  let manualSections;
+  try {
+    manualSections = parseManualHomepageSections(settings.manual_homepage_sections);
+  } catch (error) {
+    console.error("Could not validate manual homepage sections before saving their order:", error);
+    return res.status(500).json({ error: "Could not load homepage sections for ordering" });
+  }
+  const allowed = new Set([
+    ...DEFAULT_HOMEPAGE_SECTION_ORDER,
+    ...manualSections.map(section => `manual:${section.id}`)
+  ]);
+  if (!Array.isArray(order) || order.length !== allowed.size ||
+    order.some(id => typeof id !== "string" || !allowed.has(id)) ||
+    new Set(order).size !== order.length) {
+    return res.status(400).json({ error: "Homepage section order must include each section exactly once" });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO store_settings(key, value) VALUES('homepage_section_order', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [JSON.stringify(order)]
+    );
+    res.json({ ok: true, order });
+  } catch (error) {
+    console.error("Could not save homepage section order:", error);
+    res.status(500).json({ error: "Could not save homepage section order" });
   }
 });
 
