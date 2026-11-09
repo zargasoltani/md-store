@@ -335,7 +335,7 @@ body{background:var(--background);color:var(--text)}
   .modern-promo-badge { display: inline-flex; align-items: center; justify-content: center; margin-inline-start: 5px; padding: 3px 6px; border-radius: 999px; background: #e84a52; color: #fff; font-size: 9px; font-weight: 900; line-height: 1.2; vertical-align: middle; }
   .modern-cta { height: 42px; border: 0; border-radius: 14px; padding: 0 14px; background: linear-gradient(180deg, #f3d46d, #e6b93a); color: #141414; font-weight: 900; box-shadow: 0 10px 22px rgba(225,179,63,.3); }
   .store-language { height: 42px; border: 1px solid rgba(15,35,58,.12); border-radius: 14px; background: #fff; color: #1b2b3c; font-weight: 800; padding: 0 14px; }
-  .modern-hero { position: relative; isolation: isolate; overflow: hidden; min-height: 700px; background: radial-gradient(ellipse at 76% 18%, rgba(236,192,97,.24), transparent 34%), radial-gradient(ellipse at 17% 88%, rgba(201,154,59,.12), transparent 30%), linear-gradient(112deg, #35230d 0%, #60420f 48%, #8b641c 100%); }
+  .modern-hero { position: relative; isolation: isolate; overflow: hidden; min-height: 460px; background: radial-gradient(ellipse at 76% 18%, rgba(236,192,97,.24), transparent 34%), radial-gradient(ellipse at 17% 88%, rgba(201,154,59,.12), transparent 30%), linear-gradient(112deg, #35230d 0%, #60420f 48%, #8b641c 100%); }
   .modern-hero::before { content: ""; position: absolute; inset: -36px 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 82% 78%, rgba(244,207,122,.16), transparent 24%), linear-gradient(135deg, rgba(255,255,255,.055), transparent 42%); transform: translate3d(0,var(--hero-parallax-y,0px),0) scale(1.06); will-change: transform; }
   .modern-hero::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg,rgba(36,23,8,.32) 0%,rgba(50,32,9,.16) 45%,rgba(50,32,9,.02) 100%); }
   .modern-hero-inner { position: relative; z-index: 2; width: min(900px, calc(100% - 60px)); min-height: 460px; margin: 0 auto; display: grid; grid-template-columns: 1fr; align-items: center; gap: 24px; direction: ltr; }
@@ -778,8 +778,6 @@ body{background:var(--background);color:var(--text)}
   <button type="button" data-mobile-tab="account" onclick="mobileNavigate('account')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg><span id="mobileAccountLabel">Compte</span></button>
 </nav>
 <section class="hero modern-hero" id="offers" aria-label="featured offers">
-  <button class="arrow left" type="button" aria-label="previous slide" onclick="changeCampaignSlide(-1)">‹</button>
-  <button class="arrow right" type="button" aria-label="next slide" onclick="changeCampaignSlide(1)">›</button>
   <div class="modern-hero-inner">
     <div class="modern-copy">
       <span class="modern-chip" id="heroEyebrow">Shopping en ligne en Tunisie</span>
