@@ -338,10 +338,10 @@ body{background:var(--background);color:var(--text)}
   .modern-hero { position: relative; isolation: isolate; overflow: hidden; min-height: 700px; background: radial-gradient(ellipse at 76% 18%, rgba(236,192,97,.24), transparent 34%), radial-gradient(ellipse at 17% 88%, rgba(201,154,59,.12), transparent 30%), linear-gradient(112deg, #35230d 0%, #60420f 48%, #8b641c 100%); }
   .modern-hero::before { content: ""; position: absolute; inset: -36px 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 82% 78%, rgba(244,207,122,.16), transparent 24%), linear-gradient(135deg, rgba(255,255,255,.055), transparent 42%); transform: translate3d(0,var(--hero-parallax-y,0px),0) scale(1.06); will-change: transform; }
   .modern-hero::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg,rgba(36,23,8,.32) 0%,rgba(50,32,9,.16) 45%,rgba(50,32,9,.02) 100%); }
-  .modern-hero-inner { position: relative; z-index: 2; width: min(1280px, calc(100% - 60px)); min-height: 700px; margin: 0 auto; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 24px; direction: ltr; }
-  .modern-copy { padding: 68px 0 64px; }
-  html[dir="rtl"] .modern-copy { direction: rtl; text-align: right; }
-  html[dir="ltr"] .modern-copy { direction: ltr; text-align: left; }
+  .modern-hero-inner { position: relative; z-index: 2; width: min(900px, calc(100% - 60px)); min-height: 460px; margin: 0 auto; display: grid; grid-template-columns: 1fr; align-items: center; gap: 24px; direction: ltr; }
+  .modern-copy { max-width: 760px; margin: 0 auto; padding: 64px 0; text-align: center; }
+  html[dir="rtl"] .modern-copy { direction: rtl; text-align: center; }
+  html[dir="ltr"] .modern-copy { direction: ltr; text-align: center; }
   .campaign-visual { position: relative; min-width: 0; min-height: 620px; display: grid; place-items: center; overflow: hidden; perspective: 1500px; transform-style: preserve-3d; --campaign-parallax-y: 0px; }
   .campaign-visual.has-wide-slide { min-height: 0; aspect-ratio: 3 / 2; }
   .campaign-visual.has-panorama-slide { min-height: 0; aspect-ratio: 2129 / 739; }
@@ -789,13 +789,6 @@ body{background:var(--background);color:var(--text)}
         <button class="btn-primary" id="heroBuyButton" type="button" onclick="openShopPage()">Découvrir la boutique</button>
         <a class="btn-secondary" id="heroBestSellers" href="#bestSellersTitle" onclick="goToBestSellers(event)">Meilleures ventes</a>
       </div>
-    </div>
-    <div class="campaign-visual" aria-label="M&D Store campaign images">
-      <img class="campaign-image reference-banner is-active" src="/hero-reference-art.png" alt="Sélection M&D Store : high-tech, mode, maison, cadeaux, livraison rapide et offres avantageuses en Tunisie" fetchpriority="high">
-      <img class="campaign-image" src="/hero-campaign-2.png" alt="M&D Store — Découvrez notre sélection de produits" loading="lazy">
-      <img class="campaign-image campaign-wide" src="/hero-campaign-3.png" alt="Présentation MA-DOR : téléphone, casque audio, sac noir et décoration sur un présentoir doré" loading="lazy">
-      <img class="campaign-image campaign-panorama" src="/hero-campaign-4.png" alt="MA-DOR : tout ce dont vous avez besoin au même endroit, avec livraison rapide, paiement sécurisé et service client en Tunisie" loading="lazy">
-      <div class="campaign-dots" id="campaignDots" aria-label="Campaign images"></div>
     </div>
   </div>
 </section>
