@@ -471,8 +471,9 @@ async function productRows(includeInactive = false, includeStoreHidden = false) 
   const images = await pool.query("SELECT id, product_id, path, zoom_percent, is_primary FROM product_images ORDER BY is_primary DESC, id");
   const imagesByProduct = new Map();
   for (const image of images.rows) {
-    if (!imagesByProduct.has(image.product_id)) imagesByProduct.set(image.product_id, []);
-    imagesByProduct.get(image.product_id).push({
+    const productId = Number(image.product_id);
+    if (!imagesByProduct.has(productId)) imagesByProduct.set(productId, []);
+    imagesByProduct.get(productId).push({
       id: image.id,
       path: image.path,
       zoom_percent: image.zoom_percent,
@@ -484,7 +485,7 @@ async function productRows(includeInactive = false, includeStoreHidden = false) 
     const { cost_price, ...publicProduct } = product;
     return {
       ...(includeInactive ? product : publicProduct),
-      images: (imagesByProduct.get(product.id) || []).map(image => {
+      images: (imagesByProduct.get(Number(product.id)) || []).map(image => {
         if (!includeStoreHidden || product.storefront_visible !== false) return image;
         const signature = crypto.createHmac("sha256", JWT_SECRET)
           .update(`${image.id}:${adminImageExpiry}`)
