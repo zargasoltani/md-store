@@ -94,7 +94,7 @@ async function serveStorePage(req, res, requestedProductId, requestedSlug = "") 
        WHERE p.active = TRUE AND p.storefront_visible = TRUE
          AND (p.category_id IS NULL OR (c.active = TRUE AND c.storefront_visible = TRUE
            AND (c.parent_id IS NULL OR (parent.active = TRUE AND parent.storefront_visible = TRUE
-             AND (parent.parent_id IS NULL OR (root.active = TRUE AND root.storefront_visible = TRUE AND root.parent_id IS NULL)))))
+             AND (parent.parent_id IS NULL OR (root.active = TRUE AND root.storefront_visible = TRUE AND root.parent_id IS NULL))))))
        ORDER BY p.id`
     );
     const product = products.rows.find(row => productSlug(row.name) === requestedSlug);
@@ -113,7 +113,7 @@ async function serveStorePage(req, res, requestedProductId, requestedSlug = "") 
        WHERE p.id = $1 AND p.active = TRUE AND p.storefront_visible = TRUE
          AND (p.category_id IS NULL OR (c.active = TRUE AND c.storefront_visible = TRUE
            AND (c.parent_id IS NULL OR (parent.active = TRUE AND parent.storefront_visible = TRUE
-             AND (parent.parent_id IS NULL OR (root.active = TRUE AND root.storefront_visible = TRUE AND root.parent_id IS NULL)))))`,
+             AND (parent.parent_id IS NULL OR (root.active = TRUE AND root.storefront_visible = TRUE AND root.parent_id IS NULL))))))`,
       [Number(requestedId)]
     );
     if (result.rowCount) {
