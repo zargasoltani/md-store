@@ -103,7 +103,9 @@ async function serveStorePage(req, res, requestedProductId, requestedSlug = "") 
   if (/^[1-9]\d*$/.test(requestedId) && Number.isSafeInteger(Number(requestedId))) {
     const result = await pool.query(
       `SELECT p.id, p.name, p.description,
-         (SELECT path FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, id LIMIT 1) AS image
+         (SELECT '/api/products/' || image.product_id || '/images/' || image.id
+          FROM product_images image WHERE image.product_id = p.id
+          ORDER BY image.is_primary DESC, image.id LIMIT 1) AS image
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN categories parent ON parent.id = c.parent_id
@@ -181,37 +183,6 @@ app.get("/category/:slug", async (req, res) => serveStorePage(req, res));
 app.use("/uploads", express.static(uploadDir));
 app.get("/uploads/:filename", (req, res) => {
   res.status(404).json({ error: "Image not found" });
-});
-app.get("/api/product-images/:id", async (req, res) => {
-  if (!/^[1-9]\d*$/.test(req.params.id)) return res.status(404).json({ error: "Image not found" });
-  const { rows } = await pool.query(
-    `SELECT image.image_data, image.content_type, product.storefront_visible
-     FROM product_images image JOIN products product ON product.id = image.product_id
-     WHERE image.id = $1`,
-    [Number(req.params.id)]
-  );
-  const image = rows[0];
-  if (!image?.image_data || !image.content_type) return res.status(404).json({ error: "Image not found" });
-  if (!image.storefront_visible) {
-    const expiresAt = String(req.query.admin_exp || "");
-    const signature = String(req.query.admin_sig || "");
-    const expiresAtNumber = Number(expiresAt);
-    if (!/^\d{13}$/.test(expiresAt) || !/^[a-f0-9]{64}$/.test(signature) ||
-        expiresAtNumber <= Date.now() || expiresAtNumber > Date.now() + 60 * 60 * 1000 + 60 * 1000) {
-      return res.status(404).json({ error: "Image not found" });
-    }
-    const expected = crypto.createHmac("sha256", JWT_SECRET)
-      .update(`${req.params.id}:${expiresAt}`)
-      .digest();
-    const provided = Buffer.from(signature, "hex");
-    if (!crypto.timingSafeEqual(provided, expected)) {
-      return res.status(404).json({ error: "Image not found" });
-    }
-  }
-  res.set({
-    "Cache-Control": image.storefront_visible ? "public, max-age=31536000, immutable" : "private, no-store",
-    "X-Content-Type-Options": "nosniff"
-  }).type(image.content_type).send(image.image_data);
 });
 app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
@@ -310,6 +281,19 @@ function parseProductInput(body) {
 
 class OrderValidationError extends Error {}
 class InventoryAvailabilityError extends Error {}
+const PRODUCT_IMAGE_OWNER_MISMATCH = "هذه الصورة مرتبطة بمنتج آخر ولا يمكن إضافتها إلى هذا المنتج.";
+
+function productImagePath(productId, imageId) {
+  return `/api/products/${Number(productId)}/images/${Number(imageId)}`;
+}
+
+async function imageBelongsToAnotherProduct(imageId, productId) {
+  const { rows } = await pool.query(
+    "SELECT product_id FROM product_images WHERE id = $1",
+    [imageId]
+  );
+  return rows.length > 0 && Number(rows[0].product_id) !== Number(productId);
+}
 
 async function insertProductImages(client, productId, files = [], zoomPercent = 100) {
   const primaryImage = await client.query(
@@ -324,14 +308,14 @@ async function insertProductImages(client, productId, files = [], zoomPercent = 
       [productId, file.buffer, file.mimetype, zoomPercent, !hasPrimaryImage]
     );
     hasPrimaryImage = true;
-    const imagePath = `/api/product-images/${result.rows[0].id}`;
+    const imagePath = productImagePath(productId, result.rows[0].id);
     await client.query("UPDATE product_images SET path = $1 WHERE id = $2", [imagePath, result.rows[0].id]);
   }
 }
 
 async function migrateLegacyProductImages() {
   const { rows } = await pool.query(
-    `SELECT id, path FROM product_images
+    `SELECT id, product_id, path FROM product_images
      WHERE image_data IS NULL AND path ~ '^/uploads/[A-Za-z0-9._-]+$'`
   );
   const contentTypes = {
@@ -361,7 +345,7 @@ async function migrateLegacyProductImages() {
     }
     await pool.query(
       "UPDATE product_images SET path = $1, image_data = $2, content_type = $3 WHERE id = $4",
-      [`/api/product-images/${image.id}`, imageData, contentType, image.id]
+      [productImagePath(image.product_id, image.id), imageData, contentType, image.id]
     );
     migrated++;
   }
@@ -475,7 +459,8 @@ async function productRows(includeInactive = false, includeStoreHidden = false) 
     if (!imagesByProduct.has(productId)) imagesByProduct.set(productId, []);
     imagesByProduct.get(productId).push({
       id: image.id,
-      path: image.path,
+      product_id: productId,
+      path: productImagePath(productId, image.id),
       zoom_percent: image.zoom_percent,
       is_primary: image.is_primary
     });
@@ -1817,20 +1802,24 @@ app.get("/api/admin/products/:id/images", auth, async (req, res) => {
   );
   if (!product.rowCount) return res.status(404).json({ error: "المنتج غير موجود" });
   const { rows } = await pool.query(
-    `SELECT id, path, zoom_percent, is_primary
+    `SELECT id, product_id, zoom_percent, is_primary
      FROM product_images WHERE product_id = $1
      ORDER BY is_primary DESC, id`,
     [productId]
   );
   const adminImageExpiry = product.rows[0].storefront_visible ? null : Date.now() + 60 * 60 * 1000;
   res.json(rows.map(image => {
-    if (adminImageExpiry === null) return image;
+    const scopedImage = {
+      ...image,
+      path: productImagePath(image.product_id, image.id)
+    };
+    if (adminImageExpiry === null) return scopedImage;
     const signature = crypto.createHmac("sha256", JWT_SECRET)
       .update(`${image.id}:${adminImageExpiry}`)
       .digest("hex");
     return {
-      ...image,
-      path: `${image.path}?admin_exp=${adminImageExpiry}&admin_sig=${signature}`
+      ...scopedImage,
+      path: `${scopedImage.path}?admin_exp=${adminImageExpiry}&admin_sig=${signature}`
     };
   }));
 });
@@ -2039,6 +2028,9 @@ app.get("/api/admin/inventory/export.pdf", auth, role("admin", "manager"), async
 app.post("/api/products", auth, role("admin", "manager"), productUpload.array("images", 8), async (req, res) => {
   const product = parseProductInput(req.body);
   if (!product) return res.status(400).json({ error: "الاسم والسعر مطلوبان" });
+  if (req.files.length && req.body.image_product_id !== "new") {
+    return res.status(409).json({ error: PRODUCT_IMAGE_OWNER_MISMATCH });
+  }
   if (req.admin.role !== "admin" && !product.storefrontVisible) {
     return res.status(403).json({ error: "إخفاء المنتجات من الموقع متاح للمدير فقط" });
   }
@@ -2088,13 +2080,20 @@ app.post("/api/products", auth, role("admin", "manager"), productUpload.array("i
 app.put("/api/products/:id", auth, role("admin", "manager"), productUpload.array("images", 8), async (req, res) => {
   const product = parseProductInput(req.body);
   if (!product) return res.status(400).json({ error: "الاسم والسعر مطلوبان" });
+  const productId = Number(req.params.id);
+  if (!Number.isInteger(productId) || productId < 1) {
+    return res.status(400).json({ error: "معرّف المنتج غير صالح" });
+  }
+  if (req.files.length && req.body.image_product_id !== String(productId)) {
+    return res.status(409).json({ error: PRODUCT_IMAGE_OWNER_MISMATCH });
+  }
   let client;
   try {
     client = await pool.connect();
     await client.query("BEGIN");
     const existing = await client.query(
       "SELECT id, name, stock, storefront_visible FROM products WHERE id = $1 FOR UPDATE",
-      [req.params.id]
+      [productId]
     );
     if (!existing.rowCount) {
       await client.query("ROLLBACK");
@@ -2106,7 +2105,7 @@ app.put("/api/products/:id", auth, role("admin", "manager"), productUpload.array
       return res.status(404).json({ error: "المنتج غير موجود" });
     }
     if (product.advertised) {
-      await client.query("UPDATE products SET advertised = FALSE WHERE advertised = TRUE AND id <> $1", [req.params.id]);
+      await client.query("UPDATE products SET advertised = FALSE WHERE advertised = TRUE AND id <> $1", [productId]);
     }
     await client.query(
       `UPDATE products SET name=$1, short_description=$2, description=$3, category_id=$4, price=$5, cost_price=$6, delivery_price=$7, old_price=$8,
@@ -2114,15 +2113,15 @@ app.put("/api/products/:id", auth, role("admin", "manager"), productUpload.array
        storefront_visible=$15, zoom_percent=$16 WHERE id=$17`,
       [product.name, product.shortDescription, product.description, product.categoryId, product.price, product.costPrice, product.deliveryPrice,
         product.oldPrice, product.stock, product.active, product.advertised, product.colors,
-        product.showNewProducts, product.showBestSellers, product.storefrontVisible, product.zoomPercent, req.params.id]
+        product.showNewProducts, product.showBestSellers, product.storefrontVisible, product.zoomPercent, productId]
     );
-    await insertProductImages(client, req.params.id, req.files, product.zoomPercent);
+    await insertProductImages(client, productId, req.files, product.zoomPercent);
     const previousProduct = existing.rows[0];
     if (previousProduct.stock !== product.stock) {
       await client.query(
         `INSERT INTO inventory_movements(product_id, product_name, movement_type, quantity_change, stock_before, stock_after, actor)
          VALUES($1, $2, $3, $4, $5, $6, $7)`,
-        [req.params.id, product.name, product.stock > previousProduct.stock ? "restock" : "adjustment",
+        [productId, product.name, product.stock > previousProduct.stock ? "restock" : "adjustment",
           product.stock - previousProduct.stock, previousProduct.stock, product.stock, req.admin.username]
       );
     }
@@ -2170,6 +2169,47 @@ app.delete("/api/products/:id", auth, role("admin", "manager"), async (req, res)
   }
   res.json({ ok: true });
 });
+app.get("/api/products/:id/images/:imageId", async (req, res) => {
+  const productId = Number(req.params.id);
+  const imageId = Number(req.params.imageId);
+  if (!Number.isInteger(productId) || productId < 1 ||
+      !Number.isInteger(imageId) || imageId < 1) {
+    return res.status(404).json({ error: "Image not found" });
+  }
+  const { rows } = await pool.query(
+    `SELECT image.image_data, image.content_type, image.product_id, product.storefront_visible
+     FROM product_images image JOIN products product ON product.id = image.product_id
+     WHERE image.id = $1`,
+    [imageId]
+  );
+  const image = rows[0];
+  if (image && Number(image.product_id) !== productId) {
+    return res.status(409).json({ error: PRODUCT_IMAGE_OWNER_MISMATCH });
+  }
+  if (!image?.image_data || !image.content_type) {
+    return res.status(404).json({ error: "Image not found" });
+  }
+  if (!image.storefront_visible) {
+    const expiresAt = String(req.query.admin_exp || "");
+    const signature = String(req.query.admin_sig || "");
+    const expiresAtNumber = Number(expiresAt);
+    if (!/^\d{13}$/.test(expiresAt) || !/^[a-f0-9]{64}$/.test(signature) ||
+        expiresAtNumber <= Date.now() || expiresAtNumber > Date.now() + 60 * 60 * 1000 + 60 * 1000) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+    const expected = crypto.createHmac("sha256", JWT_SECRET)
+      .update(`${imageId}:${expiresAt}`)
+      .digest();
+    const actual = Buffer.from(signature, "hex");
+    if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+  }
+  res.set({
+    "Cache-Control": image.storefront_visible ? "public, max-age=31536000, immutable" : "private, no-store",
+    "X-Content-Type-Options": "nosniff"
+  }).type(image.content_type).send(image.image_data);
+});
 app.delete("/api/products/:id/images/:imageId", auth, role("admin", "manager"), async (req, res) => {
   const productId = Number(req.params.id);
   const imageId = Number(req.params.imageId);
@@ -2191,6 +2231,9 @@ app.delete("/api/products/:id/images/:imageId", auth, role("admin", "manager"), 
     );
     if (!result.rowCount) {
       await client.query("ROLLBACK");
+      if (await imageBelongsToAnotherProduct(imageId, productId)) {
+        return res.status(409).json({ error: PRODUCT_IMAGE_OWNER_MISMATCH });
+      }
       return res.status(404).json({ error: "الصورة غير موجودة" });
     }
     if (result.rows[0].is_primary) {
@@ -2230,13 +2273,14 @@ app.put("/api/products/:id/images/:imageId/primary", auth, role("admin", "manage
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "المنتج غير موجود" });
     }
-    const image = await client.query(
-      "SELECT id FROM product_images WHERE id = $1 AND product_id = $2",
-      [imageId, productId]
-    );
+    const image = await client.query("SELECT id, product_id FROM product_images WHERE id = $1", [imageId]);
     if (!image.rowCount) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "الصورة غير موجودة" });
+    }
+    if (Number(image.rows[0].product_id) !== productId) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: PRODUCT_IMAGE_OWNER_MISMATCH });
     }
     await client.query("UPDATE product_images SET is_primary = FALSE WHERE product_id = $1", [productId]);
     await client.query("UPDATE product_images SET is_primary = TRUE WHERE id = $1", [imageId]);
@@ -2272,7 +2316,12 @@ app.put("/api/products/:id/images/:imageId/zoom", auth, role("admin", "manager")
      RETURNING image.id`,
     [zoomPercent, imageId, productId, req.admin.role === "admin"]
   );
-  if (!result.rowCount) return res.status(404).json({ error: "الصورة غير موجودة" });
+  if (!result.rowCount) {
+    if (await imageBelongsToAnotherProduct(imageId, productId)) {
+      return res.status(409).json({ error: PRODUCT_IMAGE_OWNER_MISMATCH });
+    }
+    return res.status(404).json({ error: "الصورة غير موجودة" });
+  }
   res.json({ ok: true });
 });
 app.put("/api/products/:id/zoom", auth, role("admin", "manager"), async (req, res) => {

@@ -343,6 +343,8 @@ Object.assign(translations.ar,{selectedFilesHeading:"معاينة الصور ا�
 Object.assign(translations.fr,{selectedFilesHeading:"Aperçu des nouvelles images sélectionnées",savedProductImagesHeading:"Images déjà enregistrées pour ce produit"});
 Object.assign(translations.ar,{productImagesLoading:"جارٍ تحميل صور هذا المنتج...",productImagesLoadFailed:"تعذر تحميل صور هذا المنتج"});
 Object.assign(translations.fr,{productImagesLoading:"Chargement des images de ce produit…",productImagesLoadFailed:"Impossible de charger les images de ce produit"});
+Object.assign(translations.ar,{productImageOwnerMismatch:"هذه الصورة مرتبطة بمنتج آخر ولا يمكن إضافتها إلى هذا المنتج."});
+Object.assign(translations.fr,{productImageOwnerMismatch:"Cette image est liée à un autre produit et ne peut pas être ajoutée à ce produit."});
 Object.assign(translations.ar,{archiveOrders:"الطلبات المؤرشفة",restoreOrder:"استعادة الطلب",archiveOrder:"أرشفة الطلب",archiveOrderConfirm:"أرشفة الطلب رقم {id}؟ سيبقى محفوظًا ويمكن استعادته لاحقًا.",restoreOrderConfirm:"استعادة الطلب رقم {id} إلى القائمة؟",archiveOrderFailed:"تعذرت أرشفة الطلب",restoreOrderFailed:"تعذرت استعادة الطلب"});
 Object.assign(translations.fr,{archiveOrders:"Commandes archivées",restoreOrder:"Restaurer la commande",archiveOrder:"Archiver la commande",archiveOrderConfirm:"Archiver la commande n° {id} ? Elle restera enregistrée et pourra être restaurée.",restoreOrderConfirm:"Restaurer la commande n° {id} dans la liste ?",archiveOrderFailed:"Impossible d’archiver la commande",restoreOrderFailed:"Impossible de restaurer la commande"});
 Object.assign(translations.ar,{savingProduct:"جارٍ حفظ المنتج...",productNameRequired:"أدخل اسم المنتج.",productPriceRequired:"أدخل سعرًا صالحًا.",productSaveFailed:"تعذر حفظ المنتج. تحقق من الاتصال ثم أعد المحاولة.",productSavedRefreshFailed:"تم حفظ المنتج، لكن تعذر تحديث لوحة الإدارة. أعد تحميل الصفحة."});
@@ -1501,7 +1503,8 @@ function renderProductsTable(){
   const query=(productSearchEl?productSearchEl.value:"").trim().toLowerCase(),canReorder=!query&&selectedProductCategoryId===null&&!productOrderSaving;
   const filtered=allProducts.filter(product=>(selectedProductCategoryId===null||Number(product.category_id)===selectedProductCategoryId)&&(!query||`${product.name} ${product.short_description||""} ${product.description||""} ${product.category_name||""}`.toLowerCase().includes(query)));
   maskProductsBtn.setAttribute("aria-pressed",String(selectedProductCategoryId===Number(adminCategories.find(category=>category.name==="Masque")?.id)));
-  plist.innerHTML=`<p class="product-order-hint">${t("productOrderHint")}</p><table><tr><th>${t("productDrag")}</th><th>${t("images")}</th><th>${t("product")}</th><th>${t("section")}</th><th>${t("priceTnd")}</th><th>${t("deliveryTnd")}</th><th>${t("stock")}</th><th>${t("action")}</th></tr><tbody>${filtered.map((product,index)=>`<tr data-product-id="${product.id}"><td><div class="product-order-actions"><span class="product-drag-handle" draggable="${canReorder}" data-product-drag title="${t("productDrag")}" aria-label="${t("productDrag")}">⠿</span><button class="toggle-btn" type="button" data-product-move="-1" data-id="${product.id}" title="${t("productMoveUp")}" aria-label="${t("productMoveUp")}" ${!canReorder||index===0?"disabled":""}>↑</button><button class="toggle-btn" type="button" data-product-move="1" data-id="${product.id}" title="${t("productMoveDown")}" aria-label="${t("productMoveDown")}" ${!canReorder||index===filtered.length-1?"disabled":""}>↓</button></div></td><td><div class="thumbs">${product.images.map(image=>`<img class="thumb" src="${esc(image.path)}" alt="${esc(product.name)}" onclick="previewImage('${esc(image.path)}','${esc(product.name)}')">`).join("")}</div></td><td>${esc(product.name)}${product.storefront_visible===false?` <span class="pill" title="${t("hideFromStore")}">${t("productLocked")}</span>`:""}</td><td>${esc(product.category_name||"-")}</td><td>${formatCurrency(product.price)}</td><td>${formatCurrency(product.delivery_price||0)}</td><td>${product.stock}</td><td><button onclick="edit(${product.id})">${t("editProduct")}</button> <button class="danger" onclick="removeP(${product.id})">${t("deleteProduct")}</button></td></tr>`).join("")}</tbody></table>`;
+  let ownershipErrorShown=false;
+  plist.innerHTML=`<p class="product-order-hint">${t("productOrderHint")}</p><table><tr><th>${t("productDrag")}</th><th>${t("images")}</th><th>${t("product")}</th><th>${t("section")}</th><th>${t("priceTnd")}</th><th>${t("deliveryTnd")}</th><th>${t("stock")}</th><th>${t("action")}</th></tr><tbody>${filtered.map((product,index)=>{const images=product.images.filter(image=>Number(image.product_id)===Number(product.id));if(images.length!==product.images.length&&!ownershipErrorShown){ownershipErrorShown=true;alert(t("productImageOwnerMismatch"))}return `<tr data-product-id="${product.id}"><td><div class="product-order-actions"><span class="product-drag-handle" draggable="${canReorder}" data-product-drag title="${t("productDrag")}" aria-label="${t("productDrag")}">⠿</span><button class="toggle-btn" type="button" data-product-move="-1" data-id="${product.id}" title="${t("productMoveUp")}" aria-label="${t("productMoveUp")}" ${!canReorder||index===0?"disabled":""}>↑</button><button class="toggle-btn" type="button" data-product-move="1" data-id="${product.id}" title="${t("productMoveDown")}" aria-label="${t("productMoveDown")}" ${!canReorder||index===filtered.length-1?"disabled":""}>↓</button></div></td><td><div class="thumbs">${images.map(image=>`<img class="thumb" src="${esc(image.path)}" alt="${esc(product.name)}" onclick="previewImage('${esc(image.path)}','${esc(product.name)}')">`).join("")}</div></td><td>${esc(product.name)}${product.storefront_visible===false?` <span class="pill" title="${t("hideFromStore")}">${t("productLocked")}</span>`:""}</td><td>${esc(product.category_name||"-")}</td><td>${formatCurrency(product.price)}</td><td>${formatCurrency(product.delivery_price||0)}</td><td>${product.stock}</td><td><button onclick="edit(${product.id})">${t("editProduct")}</button> <button class="danger" onclick="removeP(${product.id})">${t("deleteProduct")}</button></td></tr>`}).join("")}</tbody></table>`;
 }
 async function saveProductOrder(ids){
   if(productOrderSaving)return;
@@ -1646,6 +1649,15 @@ function removeProductColor(index){
 }
 function renderProductFilePicker(){
   const files=[...pi.files];
+  const activeProductId=pid.value?String(pid.value):"new";
+  if(files.length&&pi.dataset.productId!==activeProductId){
+    pi.value="";
+    selectedProductImages.replaceChildren();
+    productFilesStatus.textContent=t("productImageOwnerMismatch");
+    productFilesStatus.title="";
+    alert(t("productImageOwnerMismatch"));
+    return false;
+  }
   productFilesStatus.textContent=files.length?t("productFilesSelected").replace("{count}",String(files.length)):t("noProductFilesSelected");
   productFilesStatus.title=files.map(file=>file.name).join("\n");
   selectedProductImages.replaceChildren();
@@ -1666,6 +1678,7 @@ function renderProductFilePicker(){
     preview.append(image,name);
     selectedProductImages.append(preview);
   }
+  return true;
 }
 productColorPicker.addEventListener("input",()=>{productColorHex.value=productColorPicker.value.toUpperCase()});
 productColorHex.addEventListener("input",()=>{const color=productColorHex.value.trim();if(/^#[0-9A-Fa-f]{6}$/.test(color))productColorPicker.value=color});
@@ -1674,12 +1687,18 @@ productColorHex.addEventListener("keydown",event=>{if(event.key==="Enter"){event
 productColorSwatches.addEventListener("click",event=>{const button=event.target.closest("[data-color-index]");if(button)removeProductColor(Number(button.dataset.colorIndex))});
 pi.addEventListener("change",renderProductFilePicker);
 function renderProductImageSettings(p){
+  if(p.images.some(image=>Number(image.product_id)!==Number(p.id))){
+    currentImages.replaceChildren();
+    alert(t("productImageOwnerMismatch"));
+    return false;
+  }
   currentImages.setAttribute("aria-label",t("savedProductImagesHeading"));
   currentImages.innerHTML=p.images.map((im,index)=>{
     const zoom=[70,80,90,100].includes(Number(im.zoom_percent))?Number(im.zoom_percent):100;
     const isPrimary=Boolean(im.is_primary)||(!p.images.some(image=>image.is_primary)&&index===0);
     return `${index===0?`<strong class="product-selected-images-heading">${t("savedProductImagesHeading")}</strong>`:""}<span class="product-image-setting" style="display:flex;flex-direction:column;align-items:center;gap:5px"><img class="thumb" src="${esc(im.path)}" alt="${esc(p.name)}" onclick="previewImage('${esc(im.path)}','${esc(p.name)}')"><span data-primary-image-badge style="${isPrimary?"":"display:none;"}padding:3px 6px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;white-space:nowrap">${t("primaryImageBadge")}</span><button type="button" data-set-primary-image="${im.id}" data-product-id="${p.id}" aria-pressed="${isPrimary}" style="padding:6px 8px;font-size:11px;white-space:nowrap">${t("setPrimaryImage")}</button><label class="image-zoom-control" style="display:flex;flex-direction:column;align-items:center;font-size:11px"><span data-image-zoom-label>${t("imageZoom")}</span><select style="width:auto;margin:0;padding:4px 6px;font-size:12px" data-image-zoom data-product-id="${p.id}" data-image-id="${im.id}" data-image-index="${index+1}" data-previous-zoom="${zoom}" aria-label="${t("imageZoom")} ${index+1}"><option data-zoom-label="imageZoom100" value="100" ${zoom===100?"selected":""}>${t("imageZoom100")}</option><option data-zoom-label="imageZoom90" value="90" ${zoom===90?"selected":""}>${t("imageZoom90")}</option><option data-zoom-label="imageZoom80" value="80" ${zoom===80?"selected":""}>${t("imageZoom80")}</option><option data-zoom-label="imageZoom70" value="70" ${zoom===70?"selected":""}>${t("imageZoom70")}</option></select></label><button class="danger" type="button" onclick="delImage(${p.id},${im.id})">×</button></span>`;
   }).join("");
+  return true;
 }
 async function loadProductImageSettings(product){
   if(currentImages.dataset.productId!==String(product.id))return;
@@ -1689,6 +1708,11 @@ async function loadProductImageSettings(product){
     const images=await response.json();
     if(!response.ok||!Array.isArray(images))throw new Error(images.error||t("productImagesLoadFailed"));
     if(currentImages.dataset.productId!==String(product.id))return;
+    if(images.some(image=>Number(image.product_id)!==Number(product.id))){
+      currentImages.replaceChildren();
+      alert(t("productImageOwnerMismatch"));
+      return;
+    }
     product.images=images;
     renderProductImageSettings(product);
   }catch(error){
@@ -1703,6 +1727,7 @@ function edit(id){
   const p=allProducts.find(x=>x.id==id);
   if(!p)return;
   pi.value="";
+  pi.dataset.productId=String(p.id);
   renderProductFilePicker();
   currentImages.dataset.productId=String(p.id);
   pid.value=p.id;pn.value=p.name;psd.value=p.short_description||"";pd.value=p.description;pc.value=p.category_id||"";pp.value=p.price;pCost.value=p.cost_price??"";pDelivery.value=p.delivery_price??0;po.value=p.old_price??"";ps.value=p.stock;pColors.value=Array.isArray(p.colors)?p.colors.join(", "):"";renderProductColors();pAdvertised.checked=Boolean(p.advertised);pNewProducts.checked=Boolean(p.show_new_products);pBestSellers.checked=Boolean(p.show_best_sellers);hideFromStoreCheckbox.checked=p.storefront_visible===false;
@@ -1712,12 +1737,24 @@ function edit(id){
   openProductForm();
   loadProductImageSettings(p);
 }
-function resetForm(){pid.value="";currentImages.dataset.productId="";pn.value="";psd.value="";pd.value="";pc.value="";pp.value="";pCost.value="";pDelivery.value="0";po.value="";ps.value="";pColors.value="";productColorPicker.value="#C99A3B";productColorHex.value="#C99A3B";renderProductColors();pAdvertised.checked=false;pNewProducts.checked=false;pBestSellers.checked=false;hideFromStoreCheckbox.checked=false;productZoomSelect.value="100";productZoomSelect.dataset.previousZoom="100";pi.value="";renderProductFilePicker();formTitle.textContent=t("createProduct");currentImages.innerHTML=""}
+function resetForm(){pid.value="";currentImages.dataset.productId="";pi.dataset.productId="new";pn.value="";psd.value="";pd.value="";pc.value="";pp.value="";pCost.value="";pDelivery.value="0";po.value="";ps.value="";pColors.value="";productColorPicker.value="#C99A3B";productColorHex.value="#C99A3B";renderProductColors();pAdvertised.checked=false;pNewProducts.checked=false;pBestSellers.checked=false;hideFromStoreCheckbox.checked=false;productZoomSelect.value="100";productZoomSelect.dataset.previousZoom="100";pi.value="";renderProductFilePicker();formTitle.textContent=t("createProduct");currentImages.innerHTML=""}
 async function saveProduct(){
   if(saveProductBtn.disabled)return;
   if(!pn.value.trim()){alert(t("productNameRequired"));pn.focus();return}
   const price=pp.value.trim();
   if(price===""||!Number.isFinite(Number(price))||Number(price)<0){alert(t("productPriceRequired"));pp.focus();return}
+  const id=pid.value,activeProductId=id?String(id):"new";
+  if(pi.files.length&&pi.dataset.productId!==activeProductId){
+    alert(t("productImageOwnerMismatch"));
+    return;
+  }
+  if(id){
+    const editedProduct=allProducts.find(product=>Number(product.id)===Number(id));
+    if(!editedProduct||editedProduct.images.some(image=>Number(image.product_id)!==Number(id))){
+      alert(t("productImageOwnerMismatch"));
+      return;
+    }
+  }
   const fd=new FormData();
   fd.append("name",pn.value);
   fd.append("short_description",psd.value);
@@ -1734,8 +1771,8 @@ async function saveProduct(){
   fd.append("show_best_sellers",pBestSellers.checked?"true":"false");
   fd.append("storefront_visible",hideFromStoreCheckbox.checked?"false":"true");
   fd.append("zoom_percent",productZoomSelect.value);
+  fd.append("image_product_id",activeProductId);
   [...pi.files].forEach(file=>fd.append("images",file));
-  const id=pid.value;
   saveProductBtn.disabled=true;
   saveProductBtn.setAttribute("aria-busy","true");
   saveProductBtn.textContent=t("savingProduct");
