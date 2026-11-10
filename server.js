@@ -612,6 +612,10 @@ function isValidHomepageUrl(value, image = false) {
   }
 }
 
+function isValidHomepageColor(value) {
+  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
+}
+
 function parseManualHomepageSections(value) {
   if (value === undefined) return [];
   const sections = JSON.parse(value);
@@ -622,6 +626,11 @@ function parseManualHomepageSections(value) {
   const orders = new Set();
   return sections.map(section => {
     const bannerImages = section?.bannerImages === undefined ? [null, null] : section.bannerImages;
+    const bannerTextPosition = section?.textPosition ?? "right";
+    const bannerTitleColor = section?.titleColor ?? "#ffffff";
+    const bannerDescriptionColor = section?.descriptionColor ?? "#f1f5f9";
+    const bannerButtonTextColor = section?.buttonTextColor ?? "#111827";
+    const bannerButtonBackgroundColor = section?.buttonBackgroundColor ?? "#d4af37";
     if (!section || typeof section.id !== "string" || !/^[a-zA-Z0-9_-]{1,60}$/.test(section.id) ||
       ids.has(section.id) || !MANUAL_HOMEPAGE_SECTION_TYPES.has(section.type) ||
       typeof section.title !== "string" || !section.title.trim() || section.title.length > 80 ||
@@ -631,6 +640,9 @@ function parseManualHomepageSections(value) {
       typeof section.buttonLink !== "string" || (section.buttonLink && !isValidHomepageUrl(section.buttonLink)) ||
       (section.imagePosition !== undefined && !["center", "left", "right"].includes(section.imagePosition)) ||
       (section.imageVerticalPosition !== undefined && !["center", "top", "bottom"].includes(section.imageVerticalPosition)) ||
+      ((section.type === "manual" || section.type === "hero_banner") &&
+        (![bannerTitleColor, bannerDescriptionColor, bannerButtonTextColor, bannerButtonBackgroundColor].every(isValidHomepageColor) ||
+          !["left", "center", "right"].includes(bannerTextPosition))) ||
       (section.type === "category_products" &&
         (!Number.isInteger(section.categoryId) || section.categoryId < 1 ||
           !Array.isArray(bannerImages) || bannerImages.length !== 2 ||
@@ -669,6 +681,13 @@ function parseManualHomepageSections(value) {
       imageVerticalPosition: section.imageVerticalPosition || "center",
       buttonText: section.buttonText.trim(),
       buttonLink: section.buttonLink,
+      ...((section.type === "manual" || section.type === "hero_banner") ? {
+        titleColor: bannerTitleColor,
+        descriptionColor: bannerDescriptionColor,
+        buttonTextColor: bannerButtonTextColor,
+        buttonBackgroundColor: bannerButtonBackgroundColor,
+        textPosition: bannerTextPosition
+      } : {}),
       enabled: section.enabled,
       order: section.order,
       ...(section.type === "category_products" ? {
