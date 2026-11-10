@@ -44,8 +44,8 @@ body.shop-page #products{width:95%;max-width:1700px;min-height:calc(100vh - var(
 @media(max-width:950px){.shop-page .shop-layout{grid-template-columns:minmax(190px,220px) minmax(0,1fr);gap:17px}}
 @media(max-width:650px){body.shop-page #products{padding:18px 14px 44px}.shop-banner{margin-bottom:17px;padding:22px 20px}.shop-page .shop-layout{grid-template-columns:minmax(0,1fr);gap:14px}.shop-filters{position:static;max-height:none;overflow:visible;padding:15px}.shop-category-list{grid-template-columns:minmax(0,1fr);max-height:180px;overflow:auto}.shop-filter-group{margin-top:13px;padding-top:13px}.shop-toolbar{align-items:flex-start;flex-direction:column;padding:11px}.shop-toolbar-controls{width:100%;display:grid;grid-template-columns:1fr 1fr}.shop-toolbar select{max-width:none;width:100%}}
 @media(max-width:380px){.shop-category-list{grid-template-columns:minmax(0,1fr)}}
-.manual-home-sections{max-width:1850px}.manual-home-category-banners{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:16px}.manual-home-category-banner{position:relative;display:block;overflow:hidden;aspect-ratio:2.25/1;border-radius:15px;background:#eee;box-shadow:0 6px 20px #1112}.manual-home-category-banner img{display:block;width:100%;height:100%;object-fit:cover}.manual-home-category-banner-arrow{position:absolute;inset-inline-start:24px;bottom:22px;display:grid;width:68px;height:68px;place-items:center;border-radius:50%;background:#f36c08;color:#fff;font-size:38px;font-weight:800;line-height:1}.category-products-heading{margin:0 0 18px}.category-products-heading h2{width:100%;padding:5px 10px;background:#b9232b;color:#fff;text-align:start;font-size:clamp(22px,2.4vw,32px);text-transform:uppercase}.category-products-heading p{margin:7px 0 0}.manual-home-category-products .products{margin-top:0}
-@media(max-width:650px){.manual-home-category-banners{grid-template-columns:minmax(0,1fr);gap:12px}.manual-home-category-banner-arrow{width:52px;height:52px;inset-inline-start:16px;bottom:16px;font-size:30px}}
+.manual-home-sections{max-width:1850px}.manual-home-category-banners{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px}.manual-home-category-banner{position:relative;display:grid;overflow:hidden;aspect-ratio:2.25/1;align-items:end;border-radius:15px;background:#14243c;box-shadow:0 6px 20px #1112}.manual-home-category-banner:after{position:absolute;inset:0;background:linear-gradient(0deg,#0b1425e8,transparent 85%);content:""}.manual-home-category-banner>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.manual-home-category-banner-content{position:relative;z-index:1;width:min(100%,680px);padding:clamp(18px,3vw,34px)}.manual-home-category-banner-content[data-text-position=left]{justify-self:start;text-align:left}.manual-home-category-banner-content[data-text-position=center]{justify-self:center;text-align:center}.manual-home-category-banner-content[data-text-position=right]{justify-self:end;text-align:right}.manual-home-category-banner-content h2{margin:0;color:var(--manual-banner-title-color,#fff);font-size:clamp(21px,3vw,34px);font-weight:900}.manual-home-category-banner-content p{margin:7px 0 14px;color:var(--manual-banner-description-color,#f1f5f9)}.manual-home-category-banner-button{display:inline-flex;padding:10px 17px;border-radius:999px;background:var(--manual-banner-button-background,#d4af37);color:var(--manual-banner-button-text,#111827);font-weight:800;text-decoration:none}.category-products-heading{margin:0 0 18px}.category-products-heading h2{width:100%;padding:5px 10px;background:#b9232b;color:#fff;text-align:start;font-size:clamp(22px,2.4vw,32px);text-transform:uppercase}.category-products-heading p{margin:7px 0 0}.manual-home-category-products .products{margin-top:0}
+@media(max-width:650px){.manual-home-category-banners{grid-template-columns:minmax(0,1fr);gap:12px}.manual-home-category-banner{aspect-ratio:1.55/1}}
 </style>
 <style>
 :root{--gold:#C99A3B;--gold2:#C99A3B;--black:#101010;--cream:#f8f6f1;--line:#e7e2d8;--muted:#777;--site-width:1000px}
@@ -1162,11 +1162,23 @@ function renderManualHomepageSections(){
 		if(section.type==="category_products"){
 			const category=currentCategories.find(item=>String(item.id)===String(section.categoryId));
 			if(!category)return "";
-			const categoryHref=esc(categoryLink(category));
-			const banners=(Array.isArray(section.bannerImages)?section.bannerImages:[]).filter(Boolean).map(image=>
-				`<a class="manual-home-category-banner" href="${categoryHref}" data-category-id="${esc(category.id)}" aria-label="${esc(category.displayName||category.name)}" onclick="openCategoryPage(this.dataset.categoryId,event)"><img src="${esc(image)}" alt="${esc(category.displayName||category.name)}" loading="lazy"><span class="manual-home-category-banner-arrow" aria-hidden="true">→</span></a>`
-			).join("");
-			return `<section class="manual-home-section manual-home-category-products" id="manual-home-${id}" data-manual-home-section="${id}">${banners?`<div class="manual-home-category-banners">${banners}</div>`:""}<header class="manual-home-section-heading category-products-heading"><h2>${title}</h2>${subtitle?`<p>${subtitle}</p>`:""}</header><div class="products" data-manual-products="${id}"></div></section>`;
+			const banners=(Array.isArray(section.banners)?section.banners:[]).filter(banner=>banner?.image).map(banner=>{
+				const bannerCategory=currentCategories.find(item=>String(item.id)===String(banner.categoryId));
+				if(!bannerCategory)return "";
+				const defaultCategoryHref=categoryLink(bannerCategory);
+				const categoryHref=esc(banner.buttonLink||defaultCategoryHref);
+				const categoryClick=banner.buttonLink?"":` data-category-id="${esc(bannerCategory.id)}" onclick="openCategoryPage(this.dataset.categoryId,event)"`;
+				const bannerTitle=esc(banner.title||"");
+				const bannerDescription=esc(banner.description||"");
+				const buttonText=esc(banner.buttonText||(currentStoreLanguage==="fr"?"Découvrir la catégorie":"اكتشفوا القسم"));
+				const titleColor=/^#[0-9a-f]{6}$/i.test(banner.titleColor||"")?banner.titleColor:"#ffffff";
+				const descriptionColor=/^#[0-9a-f]{6}$/i.test(banner.descriptionColor||"")?banner.descriptionColor:"#f1f5f9";
+				const buttonTextColor=/^#[0-9a-f]{6}$/i.test(banner.buttonTextColor||"")?banner.buttonTextColor:"#111827";
+				const buttonBackgroundColor=/^#[0-9a-f]{6}$/i.test(banner.buttonBackgroundColor||"")?banner.buttonBackgroundColor:"#d4af37";
+				const textPosition=["left","center","right"].includes(banner.textPosition)?banner.textPosition:"right";
+				return `<article class="manual-home-category-banner"><img src="${esc(banner.image)}" alt="${bannerTitle}" loading="lazy"><div class="manual-home-category-banner-content" data-text-position="${textPosition}" style="--manual-banner-title-color:${titleColor};--manual-banner-description-color:${descriptionColor};--manual-banner-button-text:${buttonTextColor};--manual-banner-button-background:${buttonBackgroundColor}"><h2>${bannerTitle}</h2>${bannerDescription?`<p>${bannerDescription}</p>`:""}<a class="manual-home-category-banner-button" href="${categoryHref}"${categoryClick}>${buttonText}</a></div></article>`;
+			}).join("");
+			return `<section class="manual-home-section manual-home-category-products" id="manual-home-${id}" data-manual-home-section="${id}">${banners?`<div class="manual-home-category-banners">${banners}</div>`:heading}<div class="products" data-manual-products="${id}"></div></section>`;
 		}
 		if(section.type==="category_showcase"){
 			const categories=categoryShowcaseItems();

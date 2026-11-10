@@ -625,7 +625,22 @@ function parseManualHomepageSections(value) {
   const ids = new Set();
   const orders = new Set();
   return sections.map(section => {
-    const bannerImages = section?.bannerImages === undefined ? [null, null] : section.bannerImages;
+    const legacyBannerImages = section?.bannerImages === undefined ? [null, null] : section.bannerImages;
+    const banners = section?.banners === undefined && section?.type === "category_products"
+      ? [1, 2].map((index) => ({
+        image: legacyBannerImages[index - 1] ?? null,
+        categoryId: section.categoryId,
+        title: section.title,
+        description: section.subtitle,
+        buttonText: "",
+        buttonLink: "",
+        titleColor: "#ffffff",
+        descriptionColor: "#f1f5f9",
+        buttonTextColor: "#111827",
+        buttonBackgroundColor: "#d4af37",
+        textPosition: "right"
+      }))
+      : section?.banners;
     const bannerTextPosition = section?.textPosition ?? "right";
     const bannerTitleColor = section?.titleColor ?? "#ffffff";
     const bannerDescriptionColor = section?.descriptionColor ?? "#f1f5f9";
@@ -645,8 +660,18 @@ function parseManualHomepageSections(value) {
           !["left", "center", "right"].includes(bannerTextPosition))) ||
       (section.type === "category_products" &&
         (!Number.isInteger(section.categoryId) || section.categoryId < 1 ||
-          !Array.isArray(bannerImages) || bannerImages.length !== 2 ||
-          bannerImages.some(image => image !== null && (typeof image !== "string" || !isValidHomepageUrl(image, true))))) ||
+          !Array.isArray(banners) || banners.length !== 2 ||
+          banners.some(banner => !banner || typeof banner !== "object" ||
+            (banner.image !== null && (typeof banner.image !== "string" || !isValidHomepageUrl(banner.image, true))) ||
+            (banner.categoryId !== null && (!Number.isInteger(banner.categoryId) || banner.categoryId < 1)) ||
+            typeof banner.title !== "string" || banner.title.length > 80 ||
+            typeof banner.description !== "string" || banner.description.length > 160 ||
+            typeof banner.buttonText !== "string" || banner.buttonText.length > 60 ||
+            typeof banner.buttonLink !== "string" || (banner.buttonLink && !isValidHomepageUrl(banner.buttonLink)) ||
+            ![banner.titleColor, banner.descriptionColor, banner.buttonTextColor, banner.buttonBackgroundColor]
+              .every(isValidHomepageColor) ||
+            !["left", "center", "right"].includes(banner.textPosition) ||
+            (banner.image && (!banner.categoryId || !banner.title.trim()))))) ||
       typeof section.enabled !== "boolean" ||
       !Number.isInteger(section.order) || section.order < 1 || section.order > sections.length ||
       orders.has(section.order)) {
@@ -660,9 +685,9 @@ function parseManualHomepageSections(value) {
       section.image !== `/api/store-assets/manual-section/${section.id}`) {
       throw new Error("Saved manual homepage sections are invalid");
     }
-    if (section.type === "category_products" && bannerImages.some((image, index) =>
-      typeof image === "string" && image.startsWith("/api/store-assets/manual-section/") &&
-      image !== `/api/store-assets/manual-section/${section.id}/banner/${index + 1}`)) {
+    if (section.type === "category_products" && banners.some((banner, index) =>
+      typeof banner.image === "string" && banner.image.startsWith("/api/store-assets/manual-section/") &&
+      banner.image !== `/api/store-assets/manual-section/${section.id}/banner/${index + 1}`)) {
       throw new Error("Saved manual homepage sections are invalid");
     }
     if (section.type !== "manual" && section.type !== "hero_banner" && section.type !== "category_showcase" &&
@@ -692,7 +717,19 @@ function parseManualHomepageSections(value) {
       order: section.order,
       ...(section.type === "category_products" ? {
         categoryId: section.categoryId,
-        bannerImages
+        banners: banners.map(banner => ({
+          image: banner.image,
+          categoryId: banner.categoryId,
+          title: banner.title.trim(),
+          description: banner.description,
+          buttonText: banner.buttonText.trim(),
+          buttonLink: banner.buttonLink.trim(),
+          titleColor: banner.titleColor,
+          descriptionColor: banner.descriptionColor,
+          buttonTextColor: banner.buttonTextColor,
+          buttonBackgroundColor: banner.buttonBackgroundColor,
+          textPosition: banner.textPosition
+        }))
       } : {}),
       ...(section.type !== "manual" && section.type !== "hero_banner" ? { productCount: section.productCount } : {})
     };
@@ -1247,17 +1284,28 @@ app.put("/api/admin/manual-homepage-sections", auth, role("admin"), manualSectio
       .some(id => !sectionIds.has(id))) {
       return res.status(400).json({ error: "Uploaded image does not match a manual section" });
     }
-    const sectionsWithImages = rawSections.map(section => ({
-      ...section,
-      image: uploadedImages.has(section?.id)
-        ? `/api/store-assets/manual-section/${section.id}`
-        : section?.image,
-      ...(section?.type === "category_products" ? {
-        bannerImages: [1, 2].map(index => uploadedBanners.has(`${section.id}:${index}`)
+    const sectionsWithImages = rawSections.map(section => {
+      const withImage = {
+        ...section,
+        image: uploadedImages.has(section?.id)
+          ? `/api/store-assets/manual-section/${section.id}`
+          : section?.image
+      };
+      if (section?.type !== "category_products") return withImage;
+      if (Array.isArray(section.banners)) {
+        withImage.banners = [1, 2].map(index => ({
+          ...section.banners[index - 1],
+          image: uploadedBanners.has(`${section.id}:${index}`)
+            ? `/api/store-assets/manual-section/${section.id}/banner/${index}`
+            : section.banners[index - 1]?.image ?? null
+        }));
+      } else {
+        withImage.bannerImages = [1, 2].map(index => uploadedBanners.has(`${section.id}:${index}`)
           ? `/api/store-assets/manual-section/${section.id}/banner/${index}`
-          : section.bannerImages?.[index - 1] ?? null)
-      } : {})
-    }));
+          : section.bannerImages?.[index - 1] ?? null);
+      }
+      return withImage;
+    });
     sections = parseManualHomepageSections(JSON.stringify(sectionsWithImages));
   } catch (error) {
     if (error instanceof SyntaxError || error.message === "Saved manual homepage sections are invalid" ||
@@ -1267,7 +1315,9 @@ app.put("/api/admin/manual-homepage-sections", auth, role("admin"), manualSectio
     }
     throw error;
   }
-  const categoryIds = sections.filter(section => section.type === "category_products").map(section => section.categoryId);
+  const categoryIds = sections.filter(section => section.type === "category_products")
+    .flatMap(section => [section.categoryId, ...section.banners.filter(banner => banner.image).map(banner => banner.categoryId)])
+    .filter(categoryId => categoryId !== null);
   if (categoryIds.length) {
     const { rows } = await pool.query(
       `SELECT c.id FROM categories c
@@ -1285,8 +1335,8 @@ app.put("/api/admin/manual-homepage-sections", auth, role("admin"), manualSectio
     if (section.image === `/api/store-assets/manual-section/${section.id}`) {
       assetKeys.push(`manual_section_${section.id}`);
     }
-    section.bannerImages?.forEach((image, index) => {
-      if (image === `/api/store-assets/manual-section/${section.id}/banner/${index + 1}`) {
+    section.banners?.forEach((banner, index) => {
+      if (banner.image === `/api/store-assets/manual-section/${section.id}/banner/${index + 1}`) {
         assetKeys.push(`manual_section_${section.id}_banner_${index + 1}`);
       }
     });
