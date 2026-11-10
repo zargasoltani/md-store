@@ -541,7 +541,7 @@ const productUpload = multer({
 });
 const manualSectionImageUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 30 },
+  limits: { fileSize: 5 * 1024 * 1024, files: 60 },
   fileFilter: (req, file, callback) => {
     if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) {
       const error = new Error("Seuls les fichiers JPEG, PNG, WebP et GIF sont acceptés");
@@ -596,6 +596,7 @@ const MANUAL_HOMEPAGE_SECTION_TYPES = new Set([
   "category_showcase",
   "featured_products",
   "promotions",
+  "category_products",
   "manual"
 ]);
 
@@ -620,6 +621,7 @@ function parseManualHomepageSections(value) {
   const ids = new Set();
   const orders = new Set();
   return sections.map(section => {
+    const bannerImages = section?.bannerImages === undefined ? [null, null] : section.bannerImages;
     if (!section || typeof section.id !== "string" || !/^[a-zA-Z0-9_-]{1,60}$/.test(section.id) ||
       ids.has(section.id) || !MANUAL_HOMEPAGE_SECTION_TYPES.has(section.type) ||
       typeof section.title !== "string" || !section.title.trim() || section.title.length > 80 ||
@@ -629,6 +631,10 @@ function parseManualHomepageSections(value) {
       typeof section.buttonLink !== "string" || (section.buttonLink && !isValidHomepageUrl(section.buttonLink)) ||
       (section.imagePosition !== undefined && !["center", "left", "right"].includes(section.imagePosition)) ||
       (section.imageVerticalPosition !== undefined && !["center", "top", "bottom"].includes(section.imageVerticalPosition)) ||
+      (section.type === "category_products" &&
+        (!Number.isInteger(section.categoryId) || section.categoryId < 1 ||
+          !Array.isArray(bannerImages) || bannerImages.length !== 2 ||
+          bannerImages.some(image => image !== null && (typeof image !== "string" || !isValidHomepageUrl(image, true))))) ||
       typeof section.enabled !== "boolean" ||
       !Number.isInteger(section.order) || section.order < 1 || section.order > sections.length ||
       orders.has(section.order)) {
@@ -640,6 +646,11 @@ function parseManualHomepageSections(value) {
     }
     if (section.image.startsWith("/api/store-assets/manual-section/") &&
       section.image !== `/api/store-assets/manual-section/${section.id}`) {
+      throw new Error("Saved manual homepage sections are invalid");
+    }
+    if (section.type === "category_products" && bannerImages.some((image, index) =>
+      typeof image === "string" && image.startsWith("/api/store-assets/manual-section/") &&
+      image !== `/api/store-assets/manual-section/${section.id}/banner/${index + 1}`)) {
       throw new Error("Saved manual homepage sections are invalid");
     }
     if (section.type !== "manual" && section.type !== "hero_banner" && section.type !== "category_showcase" &&
@@ -660,6 +671,10 @@ function parseManualHomepageSections(value) {
       buttonLink: section.buttonLink,
       enabled: section.enabled,
       order: section.order,
+      ...(section.type === "category_products" ? {
+        categoryId: section.categoryId,
+        bannerImages
+      } : {}),
       ...(section.type !== "manual" && section.type !== "hero_banner" ? { productCount: section.productCount } : {})
     };
   });
@@ -874,6 +889,30 @@ app.get("/api/store-assets/campaign/:id", async (req, res) => {
   } catch (error) {
     console.error("Could not load campaign slide image:", error);
     res.status(500).json({ error: "Could not load campaign image" });
+  }
+});
+
+app.get("/api/store-assets/manual-section/:id/banner/:index", async (req, res) => {
+  const { id, index } = req.params;
+  if (!/^[a-zA-Z0-9_-]{1,60}$/.test(id) || !["1", "2"].includes(index)) {
+    return res.status(404).json({ error: "Section banner image not found" });
+  }
+  try {
+    const { rows } = await pool.query(
+      "SELECT image_data, content_type FROM store_assets WHERE asset_key = $1",
+      [`manual_section_${id}_banner_${index}`]
+    );
+    const asset = rows[0];
+    if (!asset?.image_data || !asset.content_type) {
+      return res.status(404).json({ error: "Section banner image not found" });
+    }
+    res.set({
+      "Cache-Control": "public, max-age=3600",
+      "X-Content-Type-Options": "nosniff"
+    }).type(asset.content_type).send(asset.image_data);
+  } catch (error) {
+    console.error("Could not load manual homepage section banner:", error);
+    res.status(500).json({ error: "Could not load section banner image" });
   }
 });
 
@@ -1161,28 +1200,44 @@ app.put("/api/admin/featured-image-slider-settings", auth, role("admin"), async 
 
 app.put("/api/admin/manual-homepage-sections", auth, role("admin"), manualSectionImageUpload.any(), async (req, res) => {
   let sections;
+  const uploadedImages = new Map();
+  const uploadedBanners = new Map();
   try {
     const rawSections = JSON.parse(req.body.sections);
     if (!Array.isArray(rawSections) || rawSections.length > 30) {
       return res.status(400).json({ error: "Manual homepage sections must be an array of at most 30 items" });
     }
-    const uploadedImages = new Map();
     for (const file of req.files || []) {
-      const match = /^image_([a-zA-Z0-9_-]{1,60})$/.exec(file.fieldname);
-      if (!match || uploadedImages.has(match[1])) {
+      const imageMatch = /^image_([a-zA-Z0-9_-]{1,60})$/.exec(file.fieldname);
+      const bannerMatch = /^banner([12])_([a-zA-Z0-9_-]{1,60})$/.exec(file.fieldname);
+      if (imageMatch && !uploadedImages.has(imageMatch[1])) {
+        uploadedImages.set(imageMatch[1], file);
+        continue;
+      }
+      if (bannerMatch && !uploadedBanners.has(`${bannerMatch[2]}:${bannerMatch[1]}`)) {
+        uploadedBanners.set(`${bannerMatch[2]}:${bannerMatch[1]}`, file);
+        continue;
+      }
+      if (!imageMatch && !bannerMatch) {
         return res.status(400).json({ error: "Invalid manual section image upload" });
       }
-      uploadedImages.set(match[1], file);
+      return res.status(400).json({ error: "Duplicate manual section image upload" });
     }
     const sectionIds = new Set(rawSections.map(section => section?.id));
-    if ([...uploadedImages.keys()].some(id => !sectionIds.has(id))) {
+    if ([...uploadedImages.keys(), ...[...uploadedBanners.keys()].map(key => key.split(":")[0])]
+      .some(id => !sectionIds.has(id))) {
       return res.status(400).json({ error: "Uploaded image does not match a manual section" });
     }
     const sectionsWithImages = rawSections.map(section => ({
       ...section,
       image: uploadedImages.has(section?.id)
         ? `/api/store-assets/manual-section/${section.id}`
-        : section?.image
+        : section?.image,
+      ...(section?.type === "category_products" ? {
+        bannerImages: [1, 2].map(index => uploadedBanners.has(`${section.id}:${index}`)
+          ? `/api/store-assets/manual-section/${section.id}/banner/${index}`
+          : section.bannerImages?.[index - 1] ?? null)
+      } : {})
     }));
     sections = parseManualHomepageSections(JSON.stringify(sectionsWithImages));
   } catch (error) {
@@ -1193,20 +1248,50 @@ app.put("/api/admin/manual-homepage-sections", auth, role("admin"), manualSectio
     }
     throw error;
   }
-  const assetKeys = sections
-    .filter(section => section.image === `/api/store-assets/manual-section/${section.id}`)
-    .map(section => `manual_section_${section.id}`);
+  const categoryIds = sections.filter(section => section.type === "category_products").map(section => section.categoryId);
+  if (categoryIds.length) {
+    const { rows } = await pool.query(
+      `SELECT c.id FROM categories c
+       LEFT JOIN categories parent ON parent.id = c.parent_id
+       WHERE c.id = ANY($1::int[]) AND c.active = TRUE AND c.storefront_visible = TRUE
+         AND (c.parent_id IS NULL OR (parent.active = TRUE AND parent.storefront_visible = TRUE))`,
+      [categoryIds]
+    );
+    if (new Set(rows.map(row => Number(row.id))).size !== new Set(categoryIds).size) {
+      return res.status(400).json({ error: "Manual homepage category must be active and visible in the storefront" });
+    }
+  }
+  const assetKeys = [];
+  sections.forEach(section => {
+    if (section.image === `/api/store-assets/manual-section/${section.id}`) {
+      assetKeys.push(`manual_section_${section.id}`);
+    }
+    section.bannerImages?.forEach((image, index) => {
+      if (image === `/api/store-assets/manual-section/${section.id}/banner/${index + 1}`) {
+        assetKeys.push(`manual_section_${section.id}_banner_${index + 1}`);
+      }
+    });
+  });
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    for (const file of req.files || []) {
-      const id = file.fieldname.slice("image_".length);
+    for (const [id, file] of uploadedImages) {
       await client.query(
         `INSERT INTO store_assets(asset_key, image_data, content_type)
          VALUES($1, $2, $3)
          ON CONFLICT (asset_key) DO UPDATE
            SET image_data = EXCLUDED.image_data, content_type = EXCLUDED.content_type, updated_at = NOW()`,
         [`manual_section_${id}`, file.buffer, file.mimetype]
+      );
+    }
+    for (const [key, file] of uploadedBanners) {
+      const [id, index] = key.split(":");
+      await client.query(
+        `INSERT INTO store_assets(asset_key, image_data, content_type)
+         VALUES($1, $2, $3)
+         ON CONFLICT (asset_key) DO UPDATE
+           SET image_data = EXCLUDED.image_data, content_type = EXCLUDED.content_type, updated_at = NOW()`,
+        [`manual_section_${id}_banner_${index}`, file.buffer, file.mimetype]
       );
     }
     await client.query(

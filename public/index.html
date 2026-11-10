@@ -44,6 +44,8 @@ body.shop-page #products{width:95%;max-width:1700px;min-height:calc(100vh - var(
 @media(max-width:950px){.shop-page .shop-layout{grid-template-columns:minmax(190px,220px) minmax(0,1fr);gap:17px}}
 @media(max-width:650px){body.shop-page #products{padding:18px 14px 44px}.shop-banner{margin-bottom:17px;padding:22px 20px}.shop-page .shop-layout{grid-template-columns:minmax(0,1fr);gap:14px}.shop-filters{position:static;max-height:none;overflow:visible;padding:15px}.shop-category-list{grid-template-columns:minmax(0,1fr);max-height:180px;overflow:auto}.shop-filter-group{margin-top:13px;padding-top:13px}.shop-toolbar{align-items:flex-start;flex-direction:column;padding:11px}.shop-toolbar-controls{width:100%;display:grid;grid-template-columns:1fr 1fr}.shop-toolbar select{max-width:none;width:100%}}
 @media(max-width:380px){.shop-category-list{grid-template-columns:minmax(0,1fr)}}
+.manual-home-sections{max-width:1850px}.manual-home-category-banners{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:16px}.manual-home-category-banner{position:relative;display:block;overflow:hidden;aspect-ratio:2.25/1;border-radius:15px;background:#eee;box-shadow:0 6px 20px #1112}.manual-home-category-banner img{display:block;width:100%;height:100%;object-fit:cover}.manual-home-category-banner-arrow{position:absolute;inset-inline-start:24px;bottom:22px;display:grid;width:68px;height:68px;place-items:center;border-radius:50%;background:#f36c08;color:#fff;font-size:38px;font-weight:800;line-height:1}.category-products-heading{margin:0 0 18px}.category-products-heading h2{width:100%;padding:5px 10px;background:#b9232b;color:#fff;text-align:start;font-size:clamp(22px,2.4vw,32px);text-transform:uppercase}.category-products-heading p{margin:7px 0 0}.manual-home-category-products .products{margin-top:0}
+@media(max-width:650px){.manual-home-category-banners{grid-template-columns:minmax(0,1fr);gap:12px}.manual-home-category-banner-arrow{width:52px;height:52px;inset-inline-start:16px;bottom:16px;font-size:30px}}
 </style>
 <style>
 :root{--gold:#C99A3B;--gold2:#C99A3B;--black:#101010;--cream:#f8f6f1;--line:#e7e2d8;--muted:#777;--site-width:1000px}
@@ -1156,6 +1158,15 @@ function renderManualHomepageSections(){
 			return `<section class="manual-home-banner" id="manual-home-${id}" data-manual-home-section="${id}"><img src="${image}" alt="${title}" style="object-position:${imagePosition} ${imageVerticalPosition}" loading="lazy"><div class="manual-home-banner-content"><h2>${title}</h2>${subtitle?`<p>${subtitle}</p>`:""}<a href="${buttonLink}">${buttonText}</a></div></section>`;
 		}
 		const heading=`<header class="manual-home-section-heading"><h2>${title}</h2>${subtitle?`<p>${subtitle}</p>`:""}</header>`;
+		if(section.type==="category_products"){
+			const category=currentCategories.find(item=>String(item.id)===String(section.categoryId));
+			if(!category)return "";
+			const categoryHref=esc(categoryLink(category));
+			const banners=(Array.isArray(section.bannerImages)?section.bannerImages:[]).filter(Boolean).map(image=>
+				`<a class="manual-home-category-banner" href="${categoryHref}" data-category-id="${esc(category.id)}" aria-label="${esc(category.displayName||category.name)}" onclick="openCategoryPage(this.dataset.categoryId,event)"><img src="${esc(image)}" alt="${esc(category.displayName||category.name)}" loading="lazy"><span class="manual-home-category-banner-arrow" aria-hidden="true">→</span></a>`
+			).join("");
+			return `<section class="manual-home-section manual-home-category-products" id="manual-home-${id}" data-manual-home-section="${id}">${banners?`<div class="manual-home-category-banners">${banners}</div>`:""}<header class="manual-home-section-heading category-products-heading"><h2>${title}</h2>${subtitle?`<p>${subtitle}</p>`:""}</header><div class="products" data-manual-products="${id}"></div></section>`;
+		}
 		if(section.type==="category_showcase"){
 			const categories=categoryShowcaseItems();
 			const cards=categories.map((category,index)=>{
@@ -1178,7 +1189,11 @@ function renderManualHomepageSections(){
 	container.replaceChildren();
 	homeProductSections.querySelectorAll("[data-manual-products]").forEach(grid=>{
 		const section=sections.find(item=>item.id===grid.dataset.manualProducts);
-		renderProductGrid(featuredProducts.filter(productFilters[section.type]).sort(compareProductOrder).slice(0,section.productCount),grid);
+		const categoryIds=section.type==="category_products"?categoryDescendantIds(section.categoryId):null;
+		const productsForSection=categoryIds
+			?featuredProducts.filter(product=>categoryIds.has(String(product.category_id)))
+			:featuredProducts.filter(productFilters[section.type]);
+		renderProductGrid(productsForSection.sort(compareProductOrder).slice(0,section.productCount),grid);
 	});
 	applyHomepageContentOrder();
 }
