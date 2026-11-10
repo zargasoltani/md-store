@@ -282,6 +282,20 @@ function parseProductInput(body) {
 class OrderValidationError extends Error {}
 class InventoryAvailabilityError extends Error {}
 const PRODUCT_IMAGE_OWNER_MISMATCH = "هذه الصورة مرتبطة بمنتج آخر ولا يمكن إضافتها إلى هذا المنتج.";
+const MAX_FEATURED_PRODUCTS = 4;
+const FEATURED_PRODUCTS_ADVISORY_LOCK = "74321981";
+
+async function canFeatureProduct(client, { advertised, active, productId = null }) {
+  if (!advertised || !active) return true;
+  await client.query("SELECT pg_advisory_xact_lock($1::bigint)", [FEATURED_PRODUCTS_ADVISORY_LOCK]);
+  const result = await client.query(
+    `SELECT COUNT(*)::int AS count
+     FROM products
+     WHERE advertised = TRUE AND active = TRUE AND ($1::integer IS NULL OR id <> $1)`,
+    [productId]
+  );
+  return result.rows[0].count < MAX_FEATURED_PRODUCTS;
+}
 
 function productImagePath(productId, imageId) {
   return `/api/products/${Number(productId)}/images/${Number(imageId)}`;
@@ -2284,8 +2298,9 @@ app.post("/api/products", auth, role("admin", "manager"), productUpload.array("i
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    if (product.advertised) {
-      await client.query("UPDATE products SET advertised = FALSE WHERE advertised = TRUE");
+    if (!await canFeatureProduct(client, { advertised: product.advertised, active: true })) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "يمكن اختيار 4 منتجات مميزة كحد أقصى" });
     }
     const result = await client.query(
       `INSERT INTO products(name, short_description, description, category_id, price, cost_price, delivery_price, old_price, stock, colors, advertised,
@@ -2350,8 +2365,13 @@ app.put("/api/products/:id", auth, role("admin", "manager"), productUpload.array
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "المنتج غير موجود" });
     }
-    if (product.advertised) {
-      await client.query("UPDATE products SET advertised = FALSE WHERE advertised = TRUE AND id <> $1", [productId]);
+    if (!await canFeatureProduct(client, {
+      advertised: product.advertised,
+      active: product.active,
+      productId
+    })) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "يمكن اختيار 4 منتجات مميزة كحد أقصى" });
     }
     await client.query(
       `UPDATE products SET name=$1, short_description=$2, description=$3, category_id=$4, price=$5, cost_price=$6, delivery_price=$7, old_price=$8,
@@ -3553,8 +3573,9 @@ async function initializeDatabase() {
     ALTER TABLE products ALTER COLUMN colors SET NOT NULL;
     CREATE INDEX IF NOT EXISTS products_sort_order_idx ON products(sort_order, id)
       WHERE sort_order IS NOT NULL;
-    CREATE UNIQUE INDEX IF NOT EXISTS products_single_advertised_idx
-      ON products (advertised) WHERE advertised = TRUE AND active = TRUE;
+    DROP INDEX IF EXISTS products_single_advertised_idx;
+    CREATE INDEX IF NOT EXISTS products_advertised_active_idx
+      ON products (id) WHERE advertised = TRUE AND active = TRUE;
     CREATE TABLE IF NOT EXISTS product_images (
       id SERIAL PRIMARY KEY,
       product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,

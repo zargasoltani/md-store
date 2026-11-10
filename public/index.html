@@ -1042,7 +1042,7 @@ function updateHeroCopy(){const arabic=currentStoreLanguage==="ar";document.getE
 function goToBestSellers(event){event.preventDefault();document.getElementById("products").scrollIntoView({behavior:"smooth",block:"start"})}
 function applyStoreLanguage(){document.documentElement.lang=currentStoreLanguage;document.documentElement.dir=currentStoreLanguage==="ar"?"rtl":"ltr";document.querySelectorAll("[data-i18n]").forEach(element=>{element.textContent=storeText(element.dataset.i18n)});document.querySelectorAll("[data-i18n-placeholder]").forEach(element=>{element.placeholder=storeText(element.dataset.i18nPlaceholder)});document.querySelectorAll("[data-i18n-aria]").forEach(element=>{element.setAttribute("aria-label",storeText(element.dataset.i18nAria))});document.querySelectorAll("[data-i18n-title]").forEach(element=>{element.title=storeText(element.dataset.i18nTitle)});updateHeroCopy();if(cur)cur.textContent=storeCurrencyLabel();if(storeLanguageTarget && storeLanguageToggle){const nextLanguage=currentStoreLanguage==="ar"?"fr":"ar",toggleLabel=nextLanguage==="fr"?"Passer au français":"التبديل إلى العربية";storeLanguageTarget.textContent=nextLanguage.toUpperCase();storeLanguageToggle.setAttribute("aria-label",toggleLabel);storeLanguageToggle.title=toggleLabel;}
 updateDirectionalControls();updateStoreWhatsAppLinks();renderCategoryShowcase();renderNewArrivals();renderManualHomepageSections();renderCampaignDots();updateShopCopy()}
-function toggleStoreLanguage(){const quantity=detailQuantity,imageIndex=detailImageIndex,color=detailColor,productId=detailProduct?.id;currentStoreLanguage=currentStoreLanguage==="ar"?"fr":"ar";localStorage.setItem("md_store_lang",currentStoreLanguage);applyStoreLanguage();renderStoreNavigation();loadCats().catch(error=>console.error("Could not translate storefront categories:",error));if(search)load();render();if(detailProduct){openProductDetails(productId,false);detailQuantity=Math.min(quantity,Number(detailProduct.stock)||1);document.getElementById("detailQuantity").textContent=String(detailQuantity);setDetailImage(imageIndex);if(color&&detailProduct.colors?.includes(color))selectDetailColor(color)}if(featuredProduct)showAdvertisement(featuredProductIndex);updateCompareControls();syncFavoriteUI()}
+function toggleStoreLanguage(){const quantity=detailQuantity,imageIndex=detailImageIndex,color=detailColor,productId=detailProduct?.id;currentStoreLanguage=currentStoreLanguage==="ar"?"fr":"ar";localStorage.setItem("md_store_lang",currentStoreLanguage);applyStoreLanguage();updateFeaturedProductTitle();renderStoreNavigation();loadCats().catch(error=>console.error("Could not translate storefront categories:",error));if(search)load();render();if(detailProduct){openProductDetails(productId,false);detailQuantity=Math.min(quantity,Number(detailProduct.stock)||1);document.getElementById("detailQuantity").textContent=String(detailQuantity);setDetailImage(imageIndex);if(color&&detailProduct.colors?.includes(color))selectDetailColor(color)}if(featuredProduct)showAdvertisement(featuredProductIndex);updateCompareControls();syncFavoriteUI()}
 document.documentElement.lang=currentStoreLanguage;document.documentElement.dir=currentStoreLanguage==="ar"?"rtl":"ltr";
 const productDetail=document.getElementById("productDetail"),productsSection=document.getElementById("products"),homeProductSections=document.getElementById("homeProductSections"),heroSection=document.getElementById("offers"),categoryShowcase=document.getElementById("categoryShowcase"),newArrivalsSection=document.getElementById("newArrivals"),advertisedProductSection=document.getElementById("advertisedProductSection"),advertisedProductGrid=document.getElementById("advertisedProductGrid"),featuresSection=document.getElementById("features");
 const save=()=>localStorage.setItem("md_cart",JSON.stringify(cart));
@@ -2117,18 +2117,31 @@ async function loadAdvertisement(){
 }
 function renderAdvertisedProduct(){
 	if(featuredImageTimer){clearInterval(featuredImageTimer);featuredImageTimer=null;}
-	const product=featuredProducts.find(item=>item.advertised);
-	advertisedProductSection.hidden=shopMode||Boolean(detailProduct)||!product;
-	if(product){
-		renderProductGrid([product],advertisedProductGrid);
+	const products=featuredProducts.filter(item=>item.advertised);
+	updateFeaturedProductTitle();
+	advertisedProductSection.hidden=shopMode||Boolean(detailProduct)||!products.length;
+	if(products.length){
+		renderProductGrid(products,advertisedProductGrid);
 		const settings=cfg.featuredImageSlider||{autoplay:true,intervalSeconds:7,showArrows:true};
-		if(!advertisedProductSection.hidden&&settings.autoplay&&product.images?.length>1&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
-			const gallery=advertisedProductGrid.querySelector(".pic[data-featured-image-carousel='true']");
+		if(!advertisedProductSection.hidden&&settings.autoplay&&products.some(product=>product.images?.length>1)&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
 			featuredImageTimer=setInterval(()=>{
-				if(!advertisedProductSection.hidden&&gallery?.isConnected)changeProductImage(product.id,1,null,gallery);
+				if(advertisedProductSection.hidden)return;
+				for(const product of products){
+					if(product.images?.length<2)continue;
+					const gallery=advertisedProductGrid.querySelector(`.pic[data-product-id="${Number(product.id)}"]`);
+					if(gallery?.isConnected)changeProductImage(product.id,1,null,gallery);
+				}
 			},settings.intervalSeconds*1000);
 		}
 	}else advertisedProductGrid.replaceChildren();
+}
+function updateFeaturedProductTitle(){
+	const title=document.getElementById("advertisedProductTitle");
+	if(!title)return;
+	const count=featuredProducts.filter(product=>product.advertised).length;
+	title.textContent=count>1
+		?(currentStoreLanguage==="fr"?"Produits vedettes":"منتجات مميزة")
+		:storeText("featuredProduct");
 }
 function render(){
 	let subtotal=0,deliveryFee=0,n=0;
